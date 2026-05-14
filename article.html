@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO & Social Sharing (OG Tags) -->
+  <title>مقال — مجلة فكر</title>
+  <meta name="description" content="مقال تحليلي في مجلة فكر">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="مجلة فكر">
+  <meta property="og:title" content="مقال — مجلة فكر" id="ogTitle">
+  <meta property="og:description" content="مقال تحليلي في مجلة فكر" id="ogDesc">
+  <meta property="og:image" content="" id="ogImage">
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <!-- Header and Footer are injected by main.js -->
+
+  <main class="main-content">
+    <div class="container">
+      <article class="article-page" id="articleContainer">
+        <p class="text-center p-4">جارٍ تحميل المقال...</p>
+      </article>
+    </div>
+  </main>
+
+  <script type="module">
+    import { renderHeader, renderFooter, shareOnFacebook, showToast } from './js/main.js';
+    import { getPostBySlug, getPost, formatDate, readingTime } from './js/posts.js';
+    import { getCurrentUser } from './js/auth.js';
+    import { getComments, addComment, renderCommentsHTML } from './js/comments.js';
+
+    (async () => {
+      await renderHeader();
+
+      const params = new URLSearchParams(window.location.search);
+      const postId = params.get('id');
+      const postSlug = params.get('slug');
+      const container = document.getElementById('articleContainer');
+      const user = await getCurrentUser();
+
+      // 1. Fetch Post
+      let post = null;
+      if (postId) {
+        post = await getPost(postId);
+      } else if (postSlug) {
+        post = await getPostBySlug(postSlug);
+      }
+
+      if (!post) {
+        container.innerHTML = '<div class="text-center p-4"><h3>المقال غير موجود</h3><a href="index.html" class="btn btn-primary mt-4">العودة للرئيسية</a></div>';
+      } else {
+        // 2. Update Page Metadata & OG Tags
+        document.title = `${post.title} — مجلة فكر`;
+        document.querySelector('meta[name="description"]').content = post.excerpt;
+        document.getElementById('ogTitle').content = post.title;
+        document.getElementById('ogDesc').content = post.excerpt;
+        document.getElementById('ogImage').content = post.featured_image_url;
+
+        const section = post.sections || { name_ar: 'عام', color: '#1a1a1a' };
+        const initial = post.author_name ? post.author_name.charAt(0) : '؟';
+        const rtime = readingTime(post.content);
+        const fbIcon = `<svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`;
+
+        // 3. Render Article
+        container.innerHTML = `
+          <header class="article-page__header">
+            <span class="article-page__section-badge" style="background:${section.color}">${section.name_ar}</span>
+            <h1 class="article-page__title">${post.title}</h1>
+            
+            <div class="article-page__meta">
+              <div class="article-page__author">
+                <div class="article-page__avatar">${initial}</div>
+                <span>${post.author_name}</span>
+              </div>
+              <span class="post-card__sep">·</span>
+              <time>${formatDate(post.published_at || post.created_at)}</time>
+              <span class="post-card__sep">·</span>
+              <span>${rtime} دقائق قراءة</span>
+              
+              <button class="fb-share-btn" id="fbShareTop" style="margin-right: auto;">
+                ${fbIcon}
+                مشاركة
+              </button>
+            </div>
+          </header>
+
+          <img class="article-page__cover" src="${post.featured_image_url}" alt="${post.title}">
+
+          <div class="article-page__body">
+            ${post.content}
+          </div>
+
+          <div class="article-page__author-block">
+            <div class="author-block__avatar">${initial}</div>
+            <div class="author-block__info">
+              <strong>${post.author_name}</strong>
+              <span>كاتب ومحلل لدى مجلة فكر</span>
+            </div>
+          </div>
+
+          <div class="article-page__share">
+            <span>شارك المقال مع أصدقائك:</span>
+            <button class="fb-share-btn" id="fbShareBottom">
+              ${fbIcon}
+              فيسبوك
+            </button>
+          </div>
+
+          <!-- Comments Section -->
+          <section class="comments-section">
+            <h3>💬 التعليقات</h3>
+            
+            ${user ? `
+              <form class="comment-form" id="commentForm">
+                <textarea class="form-control" id="commentInput" placeholder="اكتب تعليقك هنا..." required></textarea>
+                <button type="submit" class="btn btn-primary" id="sendCommentBtn">إرسال التعليق</button>
+              </form>
+            ` : `
+              <p class="text-center p-4" style="background: var(--paper-dark); border-radius: 4px;">
+                <a href="login.html" style="color: var(--accent); font-weight: 700;">سجل دخولك</a> لتتمكن من إضافة تعليق.
+              </p>
+            `}
+
+            <div id="commentsList">
+              <p class="text-center p-4">جارٍ تحميل التعليقات...</p>
+            </div>
+          </section>
+        `;
+
+        // 4. Attach Event Handlers
+        const shareArticle = () => shareOnFacebook(window.location.href, post.title);
+        document.getElementById('fbShareTop').onclick = shareArticle;
+        document.getElementById('fbShareBottom').onclick = shareArticle;
+
+        // 5. Comments Logic
+        const loadComments = async () => {
+          const list = document.getElementById('commentsList');
+          const comments = await getComments(post.id);
+          list.innerHTML = renderCommentsHTML(comments, user);
+
+          // Reply buttons
+          list.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.onclick = () => {
+              const pid = btn.dataset.commentId;
+              const parent = btn.closest('.comment');
+              // Remove other reply forms
+              document.querySelectorAll('.inline-reply-form').forEach(f => f.remove());
+              
+              const form = document.createElement('div');
+              form.className = 'inline-reply-form';
+              form.innerHTML = `
+                <textarea placeholder="اكتب ردك..."></textarea>
+                <button class="btn btn-primary btn-sm">رد</button>
+              `;
+              parent.appendChild(form);
+              
+              form.querySelector('button').onclick = async () => {
+                const text = form.querySelector('textarea').value.trim();
+                if (text && user) {
+                  await addComment(post.id, user.id, user.name, text, pid);
+                  loadComments();
+                }
+              };
+            };
+          });
+        };
+
+        loadComments();
+
+        // Submit comment
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+          commentForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('commentInput');
+            const btn = document.getElementById('sendCommentBtn');
+            const text = input.value.trim();
+
+            if (text && user) {
+              btn.disabled = true;
+              try {
+                await addComment(post.id, user.id, user.name, text);
+                input.value = '';
+                showToast('تم إضافة تعليقك بنجاح');
+                loadComments();
+              } catch (err) {
+                showToast('عذراً، حدث خطأ ما', 'error');
+              } finally {
+                btn.disabled = false;
+              }
+            }
+          };
+        }
+      }
+
+      renderFooter();
+    })();
+  </script>
+</body>
+</html>

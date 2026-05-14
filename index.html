@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="مجلة فكر — منصة عربية مستقلة لنشر المقالات التحليلية والفكرية في الاقتصاد والمجتمع والأخبار والأفكار">
+  <title>مجلة فكر — الرئيسية</title>
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <!-- Header and Footer are injected by main.js -->
+
+  <main class="main-content">
+    <div class="container">
+      
+      <!-- Editorial Date Line -->
+      <div class="home-masthead-rule">
+        <span>العدد الأول</span>
+        <span style="margin: 0 1.5rem;">•</span>
+        <span>إصدار تجريبي</span>
+        <span style="margin: 0 1.5rem;">•</span>
+        <span>محررة في القاهرة</span>
+      </div>
+
+      <!-- Breaking Bar / Ticker -->
+      <div class="breaking-bar" id="breakingBar">
+        <div class="breaking-bar__label">عاجل</div>
+        <div class="breaking-bar__track" id="tickerTrack"></div>
+      </div>
+
+      <!-- Lead Section (Featured + Sidebar) -->
+      <div class="home-lead">
+        <div id="heroContainer">
+          <!-- Hero post injected here -->
+          <p class="text-center p-4">جارٍ التحميل...</p>
+        </div>
+        <aside class="home-sidebar">
+          <h3>آخر المقالات</h3>
+          <div id="sidebarList">
+            <!-- Latest posts injected here -->
+          </div>
+        </aside>
+      </div>
+
+      <!-- Dynamic Section Blocks -->
+      <div id="sectionsContainer">
+        <!-- Sections and their posts injected here -->
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { renderHeader, renderFooter, renderPostCard, renderPostRow } from './js/main.js';
+    import { getPosts } from './js/posts.js';
+    import { getSections } from './js/sections.js';
+
+    (async () => {
+      // 1. Initial renders
+      await renderHeader();
+
+      // 2. Fetch data
+      const [allPosts, sections] = await Promise.all([
+        getPosts({ status: 'published', limit: 20 }),
+        getSections()
+      ]);
+
+      // 3. Render Hero (Latest Featured or just Latest)
+      const heroContainer = document.getElementById('heroContainer');
+      const featured = allPosts.find(p => p.is_featured) || allPosts[0];
+      
+      if (featured) {
+        heroContainer.innerHTML = renderPostCard(featured, 'featured');
+      } else {
+        heroContainer.innerHTML = '<p class="text-center p-4">لا توجد مقالات منشورة بعد.</p>';
+      }
+
+      // 4. Render Sidebar (Latest excluding hero)
+      const sidebarList = document.getElementById('sidebarList');
+      const latest = allPosts.filter(p => p.id !== featured?.id).slice(0, 5);
+      sidebarList.innerHTML = latest.map(p => renderPostRow(p)).join('');
+
+      // 5. Render Section Blocks
+      const sectionsContainer = document.getElementById('sectionsContainer');
+      let sectionsHTML = '';
+
+      for (const section of sections) {
+        const sectionPosts = allPosts.filter(p => p.section_id === section.id).slice(0, 3);
+        if (sectionPosts.length === 0) continue;
+
+        sectionsHTML += `
+          <section class="section-block">
+            <div class="section-rule">
+              <div class="section-rule__color-bar" style="background:${section.color}"></div>
+              <h2 class="section-rule__label">${section.name_ar}</h2>
+              <div class="section-rule__line"></div>
+              <a href="category.html?section=${section.slug}" class="section-rule__link">عرض القسم ←</a>
+            </div>
+            <div class="grid grid-cols-3">
+              ${sectionPosts.map(p => renderPostCard(p)).join('')}
+            </div>
+          </section>
+        `;
+      }
+      sectionsContainer.innerHTML = sectionsHTML;
+
+      // 6. News Ticker (Titles only)
+      const tickerTrack = document.getElementById('tickerTrack');
+      tickerTrack.innerHTML = allPosts.slice(0, 8).map(p => `
+        <span style="margin: 0 2rem;">🔹 ${p.title}</span>
+      `).join('');
+
+      renderFooter();
+    })();
+  </script>
+</body>
+</html>

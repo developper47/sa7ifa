@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="تسجيل الدخول — مجلة فكر">
+  <title>دخول الكتاب — مجلة فكر</title>
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="auth-page-bg">
+
+  <main class="auth-card">
+    <div class="auth-logo">
+      <a href="index.html" class="logo-main">فِكر</a>
+      <p>بوابة الكتاب والمحررين</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTab">تسجيل الدخول</button>
+      <button class="auth-tab" id="signupTab">إنشاء حساب</button>
+    </div>
+
+    <div id="authMessage" class="auth-message"></div>
+
+    <!-- Login Form -->
+    <form class="auth-form active" id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">البريد الإلكتروني</label>
+        <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">كلمة المرور</label>
+        <input type="password" class="form-control" id="loginPassword" placeholder="********" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="loginBtn">دخول</button>
+    </form>
+
+    <!-- Signup Form -->
+    <form class="auth-form" id="signupForm">
+      <div class="form-group">
+        <label class="form-label" for="signupName">الاسم الكامل</label>
+        <input type="text" class="form-control" id="signupName" placeholder="أحمد محمد" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signupEmail">البريد الإلكتروني</label>
+        <input type="email" class="form-control" id="signupEmail" placeholder="name@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signupPassword">كلمة المرور</label>
+        <input type="password" class="form-control" id="signupPassword" placeholder="********" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="signupBtn">إنشاء حساب جديد</button>
+    </form>
+
+    <div style="text-align:center; margin-top: 1.5rem;">
+      <a href="index.html" style="color: var(--ink-light); font-size: 0.82rem;">العودة إلى الصفحة الرئيسية</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { signIn, signUp, getCurrentUser } from './js/auth.js';
+
+    (async () => {
+      const user = await getCurrentUser();
+      if (user) window.location.href = 'dashboard.html';
+
+      const loginTab = document.getElementById('loginTab');
+      const signupTab = document.getElementById('signupTab');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const message = document.getElementById('authMessage');
+
+      const loginBtn = document.getElementById('loginBtn');
+      const signupBtn = document.getElementById('signupBtn');
+
+      const showMsg = (txt, type) => {
+        message.textContent = txt;
+        message.className = `auth-message ${type}`;
+      };
+
+      // Tab logic
+      loginTab.onclick = () => {
+        loginTab.classList.add('active'); signupTab.classList.remove('active');
+        loginForm.classList.add('active'); signupForm.classList.remove('active');
+      };
+      signupTab.onclick = () => {
+        signupTab.classList.add('active'); loginTab.classList.remove('active');
+        signupForm.classList.add('active'); loginForm.classList.remove('active');
+      };
+
+      if (window.location.hash === '#signup') signupTab.click();
+
+      // Sign In
+      loginForm.onsubmit = async (e) => {
+        e.preventDefault();
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'جارٍ التحقق...';
+        
+        const res = await signIn(
+          document.getElementById('loginEmail').value,
+          document.getElementById('loginPassword').value
+        );
+
+        if (res.success) {
+          showMsg('تم تسجيل الدخول بنجاح! جارٍ التحويل...', 'success');
+          setTimeout(() => window.location.href = 'dashboard.html', 800);
+        } else {
+          showMsg(res.message, 'error');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'دخول';
+        }
+      };
+
+      // Sign Up
+      signupForm.onsubmit = async (e) => {
+        e.preventDefault();
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'جارٍ الإنشاء...';
+
+        const res = await signUp(
+          document.getElementById('signupName').value,
+          document.getElementById('signupEmail').value,
+          document.getElementById('signupPassword').value
+        );
+
+        if (res.success) {
+          showMsg('تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.', 'success');
+          signupForm.reset();
+          loginTab.click();
+        } else {
+          showMsg(res.message, 'error');
+        }
+        signupBtn.disabled = false;
+        signupBtn.textContent = 'إنشاء حساب جديد';
+      };
+    })();
+  </script>
+</body>
+</html>

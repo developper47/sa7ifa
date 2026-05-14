@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم — مجلة فكر</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --dash-sidebar: #121212;
+      --dash-accent: #8b1a1a;
+      --dash-accent-soft: #fff5f5;
+      --dash-bg: #f8f9fa;
+      --dash-card: #ffffff;
+      --dash-text: #2d3436;
+      --dash-text-muted: #636e72;
+      --dash-radius: 12px;
+      --dash-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    }
+
+    body.dashboard-page {
+      background-color: var(--dash-bg);
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      color: var(--dash-text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--dash-sidebar);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      position: fixed;
+      height: 100vh;
+      right: 0;
+      top: 0;
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      font-family: 'Amiri', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 2.5rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 1rem;
+    }
+
+    .nav-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+    .nav-item { margin-bottom: 0.5rem; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      color: #b2bec3;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.25s;
+      font-weight: 500;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--dash-accent);
+      color: #fff;
+    }
+    .nav-label { font-size: 0.75rem; color: #636e72; text-transform: uppercase; margin: 1.5rem 1rem 0.5rem; }
+
+    /* Main Content Area */
+    .main-content-dash {
+      margin-right: 280px;
+      width: calc(100% - 280px);
+      padding: 2rem 3rem;
+      box-sizing: border-box;
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    #viewTitle { font-family: 'Amiri', serif; font-size: 2.4rem; margin: 0; color: var(--ink); }
+
+    /* Content Cards */
+    .card {
+      background: var(--dash-card);
+      border-radius: var(--dash-radius);
+      box-shadow: var(--dash-shadow);
+      padding: 2.5rem;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* Padding for Section Management title */
+    .section-title-wrap {
+       padding-bottom: 1.5rem;
+       margin-bottom: 1.5rem;
+       border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Lists */
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      transition: transform 0.2s;
+    }
+    .list-item:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+    }
+    .btn-primary { background: var(--dash-accent); color: #fff; }
+    .btn-primary:hover { background: #6b1414; box-shadow: 0 4px 12px rgba(139, 26, 26, 0.3); }
+    .btn-outline { background: #fff; border: 1.5px solid #dfe6e9; color: #2d3436; }
+    .btn-outline:hover { background: #f8f9fa; border-color: #b2bec3; }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+      display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; width: 100%; max-width: 500px;
+      border-radius: 15px; padding: 2.5rem; box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+    }
+
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; margin-bottom: 0.6rem; font-weight: 700; font-size: 0.9rem; }
+    .form-control {
+      width: 100%; padding: 0.9rem; border: 1.5px solid #eee; border-radius: 8px;
+      font-family: inherit; font-size: 1rem;
+    }
+    .form-control:focus { border-color: var(--dash-accent); outline: none; box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.1); }
+
+    /* Mobile */
+    @media (max-width: 1024px) {
+      .sidebar { width: 80px; padding: 1.5rem 0.5rem; align-items: center; }
+      .sidebar-brand, .nav-link span, .nav-label { display: none; }
+      .main-content-dash { margin-right: 80px; width: calc(100% - 80px); padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">فِكر</div>
+    <ul class="nav-list">
+      <div class="nav-label">المحتوى</div>
+      <li class="nav-item">
+        <a href="#" class="nav-link active" id="navPosts"><span>📝</span> <span>مقالاتي</span></a>
+      </li>
+      
+      <div id="adminNav" style="display: none;">
+        <div class="nav-label">الإدارة</div>
+        <li class="nav-item">
+          <a href="#sections" class="nav-link" id="navSections"><span>🛡️</span> <span>الأقسام</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="#moderate" class="nav-link" id="navModerate"><span>⚖️</span> <span>المراجعة</span></a>
+        </li>
+      </div>
+    </ul>
+
+    <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+      <a href="index.html" class="nav-link"><span>🏠</span> <span>الموقع العام</span></a>
+      <a href="#" class="nav-link" id="logoutBtn" style="color: #ff7675;"><span>🚪</span> <span>الخروج</span></a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content-dash">
+    <header class="dash-header">
+      <h1 id="viewTitle">لوحة التحكم</h1>
+      <div id="userInfo" style="font-weight: 600;">...</div>
+    </header>
+
+    <div id="viewContainer" class="card">
+      <div class="text-center p-4">
+        <p>جارٍ تحميل البيانات...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <script type="module">
+    import { renderHeader, renderFooter, showToast } from './js/main.js';
+    import { getCurrentUser, signOut } from './js/auth.js';
+    import { getPosts, savePost, deletePost, moderatePost, statusLabel } from './js/posts.js';
+    import { getSections, getAllSections, createSection, updateSection, deleteSection } from './js/sections.js';
+    import { supabase } from './js/supabase.js';
+
+    let user = null;
+
+    async function init() {
+      user = await getCurrentUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      
+      document.getElementById('userInfo').textContent = `مرحباً، ${user.name}`;
+      if (user.role === 'admin') document.getElementById('adminNav').style.display = 'block';
+
+      renderPostsView();
+    }
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalContent = document.getElementById('modalContent');
+    const viewContainer = document.getElementById('viewContainer');
+    const viewTitle = document.getElementById('viewTitle');
+
+    const openModal = (html) => { modalContent.innerHTML = html; modalOverlay.classList.add('open'); };
+    const closeModal = () => modalOverlay.classList.remove('open');
+    modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
+
+    // --- VIEW: POSTS ---
+    async function renderPostsView(isModerate = false) {
+      viewTitle.textContent = isModerate ? 'مراجعة المقالات' : 'مقالاتي';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ جلب البيانات...</strong></div>';
+      
+      try {
+        const filter = isModerate ? { status: 'all' } : { author_id: user.id, status: 'all' };
+        const posts = await getPosts(filter);
+        
+        let html = `
+          <div class="section-title-wrap" style="display:flex; justify-content:space-between; align-items:center;">
+            <p>إجمالي المقالات: <strong>${posts.length}</strong></p>
+            ${!isModerate ? '<button class="btn btn-primary" id="createNewPost">+ مقال جديد</button>' : ''}
+          </div>
+          <div class="posts-list">
+        `;
+
+        if (posts.length === 0) {
+          html += '<p class="text-center p-4">لا توجد مقالات حالياً.</p>';
+        } else {
+          posts.forEach(p => {
+            const status = statusLabel(p.status);
+            html += `
+              <div class="list-item">
+                <div>
+                  <div style="font-weight:700; font-size:1.15rem; margin-bottom:0.4rem;">${p.title}</div>
+                  <div style="font-size:0.85rem; color:#636e72;">
+                    <span class="status-badge ${status.css}" style="padding: 2px 8px; border-radius:4px; font-size:0.75rem;">${status.label}</span>
+                    <span style="margin: 0 0.5rem;">|</span>
+                    <span>👤 ${p.author_name}</span>
+                  </div>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                  <a href="article.html?id=${p.id}" target="_blank" class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.85rem;">عرض</a>
+                  ${!isModerate ? `<button class="btn btn-outline edit-post" data-id="${p.id}" style="padding:0.4rem 0.8rem; font-size:0.85rem;">تعديل</button>` : ''}
+                  ${isModerate && user.role === 'admin' ? `
+                    <button class="btn btn-primary moderate-post" data-id="${p.id}" data-status="published" style="padding:0.4rem 0.8rem; font-size:0.85rem;">نشر</button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          });
+        }
+        html += '</div>';
+        viewContainer.innerHTML = html;
+
+        const createBtn = document.getElementById('createNewPost');
+        if (createBtn) createBtn.onclick = () => renderPostEditor();
+        viewContainer.querySelectorAll('.edit-post').forEach(btn => {
+          btn.onclick = () => renderPostEditor(posts.find(p => p.id === btn.dataset.id));
+        });
+        viewContainer.querySelectorAll('.moderate-post').forEach(btn => {
+          btn.onclick = async () => {
+            try {
+              await moderatePost(btn.dataset.id, btn.dataset.status);
+              showToast('تمت الموافقة على النشر');
+              renderPostsView(true);
+            } catch (err) { showToast(err.message, 'error'); }
+          };
+        });
+      } catch (err) { viewContainer.innerHTML = `<p>فشل التحميل: ${err.message}</p>`; }
+    }
+
+    // --- VIEW: EDITOR ---
+    async function renderPostEditor(post = null) {
+      const isEdit = !!post;
+      viewTitle.textContent = isEdit ? 'تعديل المقال' : 'مقال جديد';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ فتح المحرر...</strong></div>';
+
+      try {
+        const sections = await getSections();
+        viewContainer.innerHTML = `
+          <form id="postForm">
+            <div class="form-group">
+              <label class="form-label">العنوان</label>
+              <input type="text" class="form-control" id="postTitle" value="${post?.title || ''}" required>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+              <div class="form-group">
+                <label class="form-label">القسم</label>
+                <select class="form-control" id="postSection" required>
+                  ${sections.map(s => `<option value="${s.id}" ${post?.section_id === s.id ? 'selected' : ''}>${s.name_ar}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">رابط الصورة</label>
+                <input type="url" class="form-control" id="postImage" value="${post?.featured_image_url || ''}" placeholder="https://example.com/image.jpg">
+                <div id="imagePreview" style="margin-top:0.5rem; border:1px dashed #ddd; border-radius:8px; height:100px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8f9fa;">
+                  ${post?.featured_image_url ? `<img src="${post.featured_image_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>'}
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">المحتوى</label>
+              <textarea class="form-control" id="postContent" style="min-height: 450px;" required>${post?.content || ''}</textarea>
+            </div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+              <button type="submit" class="btn btn-primary" id="savePostBtn">حفظ المقال</button>
+              <button type="button" class="btn btn-outline" onclick="renderPostsView()">إلغاء</button>
+            </div>
+          </form>
+        `;
+
+        const imgInput = document.getElementById('postImage');
+        const imgPreview = document.getElementById('imagePreview');
+        imgInput.oninput = () => {
+          const url = imgInput.value.trim();
+          if (url) {
+            imgPreview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+          } else {
+            imgPreview.innerHTML = '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>';
+          }
+        };
+
+        document.getElementById('postForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('savePostBtn');
+          btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
+          try {
+            const payload = {
+              title: document.getElementById('postTitle').value,
+              section_id: document.getElementById('postSection').value,
+              featured_image_url: document.getElementById('postImage').value,
+              content: document.getElementById('postContent').value,
+              excerpt: document.getElementById('postContent').value.substring(0, 180).replace(/<[^>]+>/g, ''),
+              author_id: user.id, author_name: user.name,
+              status: 'pending' // Re-enabled moderation: requires admin approval
+            };
+            if (isEdit) payload.id = post.id;
+            
+            await savePost(payload);
+            showToast('تم حفظ المقال بنجاح');
+            renderPostsView();
+          } catch (err) { showToast(err.message, 'error'); btn.disabled = false; btn.textContent = 'حفظ المقال'; }
+        };
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // --- VIEW: SECTIONS ---
+    async function renderSectionsView() {
+      viewTitle.textContent = 'إدارة الأقسام';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ التحميل...</strong></div>';
+      try {
+        const sections = await getAllSections(true);
+        viewContainer.innerHTML = `
+          <div class="section-title-wrap" style="display:flex; justify-content:space-between; align-items:center;">
+            <p>لديك <strong>${sections.length}</strong> أقسام معرفة</p>
+            <button class="btn btn-primary" id="addSectionBtn">+ إضافة قسم</button>
+          </div>
+          <div class="sections-list">
+            ${sections.map(s => `
+              <div class="list-item">
+                <div>
+                  <div style="font-weight:700;">${s.name_ar}</div>
+                  <div style="font-size:0.8rem; color:#888;">URL: /${s.slug}</div>
+                </div>
+                <div>
+                  <button class="btn btn-outline edit-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem;">تعديل</button>
+                  <button class="btn btn-outline del-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--accent);">حذف</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        document.getElementById('addSectionBtn').onclick = () => renderSectionModal();
+        viewContainer.querySelectorAll('.edit-sec').forEach(btn => {
+          btn.onclick = () => renderSectionModal(sections.find(s => s.id === btn.dataset.id));
+        });
+        viewContainer.querySelectorAll('.del-sec').forEach(btn => {
+          btn.onclick = async () => {
+            if (confirm('حذف هذا القسم؟')) {
+              try { await deleteSection(btn.dataset.id); showToast('تم الحذف'); renderSectionsView(); }
+              catch (err) { showToast(err.message, 'error'); }
+            }
+          };
+        });
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function renderSectionModal(sec = null) {
+      const isEdit = !!sec;
+      openModal(`
+        <h2 style="font-family:'Amiri',serif; margin-bottom:1.5rem;">${isEdit ? 'تعديل قسم' : 'قسم جديد'}</h2>
+        <form id="secForm">
+          <div class="form-group">
+            <label class="form-label">الاسم (عربي)</label>
+            <input type="text" class="form-control" id="secAr" value="${sec?.name_ar || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الرابط (Slug - إنجليزي)</label>
+            <input type="text" class="form-control" id="secSlug" value="${sec?.slug || ''}" required>
+          </div>
+          <div style="display:flex; gap:1rem; margin-top:2rem;">
+            <button type="submit" class="btn btn-primary" id="saveSecBtn">حفظ القسم</button>
+            <button type="button" class="btn btn-outline" id="closeModal">إلغاء</button>
+          </div>
+        </form>
+      `);
+      document.getElementById('closeModal').onclick = closeModal;
+      document.getElementById('secForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('saveSecBtn');
+        btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
+        try {
+          const payload = {
+            name_ar: document.getElementById('secAr').value,
+            name_en: document.getElementById('secAr').value,
+            slug: document.getElementById('secSlug').value
+          };
+          if (isEdit) await updateSection(sec.id, payload);
+          else await createSection(payload);
+          showToast('تم الحفظ بنجاح');
+          closeModal();
+          renderSectionsView();
+        } catch (err) { showToast(err.message, 'error'); btn.disabled = false; btn.textContent = 'حفظ القسم'; }
+      };
+    }
+
+    // --- NAV ---
+    const navLinks = document.querySelectorAll('.nav-link');
+    const resetNav = () => navLinks.forEach(l => l.classList.remove('active'));
+
+    document.getElementById('navPosts').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(); };
+    document.getElementById('navSections').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSectionsView(); };
+    document.getElementById('navModerate').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(true); };
+    document.getElementById('logoutBtn').onclick = async () => { await signOut(); window.location.href = 'index.html'; };
+
+    init();
+  </script>
+</body>
+</html>

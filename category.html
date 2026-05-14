@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="تصفح المقالات حسب القسم — مجلة فكر">
+  <title>القسم — مجلة فكر</title>
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <!-- Header and Footer are injected by main.js -->
+
+  <main class="main-content">
+    <div class="container">
+      <header class="section-page-header" id="sectionHeader">
+        <div class="section-color-stripe" id="sectionStripe"></div>
+        <h1 id="sectionTitle">القسم</h1>
+        <p id="sectionDesc">تصفح أحدث التحليلات والمقالات</p>
+      </header>
+
+      <div class="grid grid-cols-3" id="postsGrid">
+        <p class="text-center p-4" style="grid-column: 1/-1;">جارٍ تحميل المقالات...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { renderHeader, renderFooter, renderPostCard } from './js/main.js';
+    import { getPosts } from './js/posts.js';
+    import { getSectionBySlug } from './js/sections.js';
+
+    (async () => {
+      await renderHeader();
+
+      const params = new URLSearchParams(window.location.search);
+      const sectionSlug = params.get('section');
+      const grid = document.getElementById('postsGrid');
+      const title = document.getElementById('sectionTitle');
+      const stripe = document.getElementById('sectionStripe');
+
+      if (!sectionSlug) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 1. Fetch Section Info
+      const section = await getSectionBySlug(sectionSlug);
+      if (!section) {
+        title.textContent = 'القسم غير موجود';
+        grid.innerHTML = '';
+      } else {
+        title.textContent = section.name_ar;
+        document.title = `${section.name_ar} — مجلة فكر`;
+        stripe.style.background = section.color;
+        
+        // 2. Fetch Posts for this section
+        const posts = await getPosts({ section_id: section.id, status: 'published' });
+        
+        if (posts.length > 0) {
+          grid.innerHTML = posts.map(p => renderPostCard(p)).join('');
+        } else {
+          grid.innerHTML = '<p class="text-center p-4" style="grid-column: 1/-1; color: var(--ink-light);">لا توجد مقالات منشورة في هذا القسم بعد.</p>';
+        }
+      }
+
+      renderFooter();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Local server and temp files
+.tempmediaStorage/
+browser/
+scratch/
+*.log
+node_modules/
+.DS_Store
+Thumbs.db

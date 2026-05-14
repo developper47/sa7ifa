@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم — مجلة فكر</title>
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+  <main class="main-content">
+    <div class="container submit-container">
+      <div id="authCheck"></div>
+
+      <div id="editorArea" style="display:none;">
+        <h1 class="mb-3">✏️ لوحة التحكم</h1>
+        
+        <div class="editor-card mb-4" id="writeSection">
+          <h2 class="mb-2">إنشاء مقال جديد</h2>
+          <form id="articleForm">
+            <input type="hidden" id="artId">
+            <div class="form-group">
+              <label class="form-label" for="artTitle">عنوان المقال</label>
+              <input type="text" class="form-control" id="artTitle" placeholder="أدخل عنواناً جذاباً..." required>
+            </div>
+
+            <div class="grid grid-cols-2">
+              <div class="form-group">
+                <label class="form-label" for="artCategory">القسم</label>
+                <select class="form-control" id="artCategory" required>
+                  <option value="economy">اقتصاد</option>
+                  <option value="society">مجتمع</option>
+                  <option value="news">أخبار</option>
+                  <option value="ideas">فكر وأيديولوجيا</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="artTags">الوسوم (مفصولة بفاصلة)</label>
+                <input type="text" class="form-control" id="artTags" placeholder="اقتصاد, تضخم, تحليل">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="artImage">رابط صورة المقال</label>
+              <input type="url" class="form-control" id="artImage" placeholder="https://images.unsplash.com/photo-..." required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="artExcerpt">ملخص قصير (يظهر في البطاقة)</label>
+              <textarea class="form-control" id="artExcerpt" style="min-height:80px;" placeholder="اكتب ملخصاً جذاباً للمقال..." required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="artBody">محتوى المقال (يدعم HTML)</label>
+              <textarea class="form-control" id="artBody" style="min-height:250px;" placeholder="ابدأ بكتابة أفكارك هنا..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn">حفظ ونشر المراجعة</button>
+            <button type="button" class="btn btn-outline" id="cancelEdit" style="display:none;">إلغاء التعديل</button>
+          </form>
+        </div>
+
+        <!-- Dashboard Lists -->
+        <div class="dashboard-tabs mt-4">
+          <button class="auth-tab active" id="myArticlesTab">مقالاتي</button>
+          <button class="auth-tab" id="adminTab" style="display:none;">🛡️ مراجعة المقالات</button>
+        </div>
+
+        <section class="my-articles-section mt-3">
+          <div id="articleList">
+            <p class="text-center p-4">جارٍ التحميل...</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { renderHeader, renderFooter } from './js/main.js';
+    import { getCurrentUser, isAdmin } from './js/auth.js';
+    import { saveArticle, getArticles, moderateArticle, deleteArticle, getArticle, CATEGORIES } from './js/articles.js';
+
+    renderHeader();
+
+    const user = await getCurrentUser();
+    const isAdminUser = isAdmin(user);
+    const authCheck = document.getElementById('authCheck');
+    const editorArea = document.getElementById('editorArea');
+    const articleForm = document.getElementById('articleForm');
+    const articleList = document.getElementById('articleList');
+    const adminTab = document.getElementById('adminTab');
+    const myArticlesTab = document.getElementById('myArticlesTab');
+    const toast = document.getElementById('toast');
+    const writeSection = document.getElementById('writeSection');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelEdit = document.getElementById('cancelEdit');
+
+    let currentView = 'user'; // 'user' or 'admin'
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    if (!user) {
+      authCheck.innerHTML = `
+        <div class="text-center" style="padding: 100px 0;">
+          <h2>عذراً، يجب تسجيل الدخول للوصول لهذه الصفحة</h2>
+          <p class="mb-3">يرجى تسجيل الدخول أو إنشاء حساب للبدء في كتابة مقالاتك.</p>
+          <a href="login.html" class="btn btn-primary">تسجيل الدخول</a>
+        </div>
+      `;
+    } else {
+      editorArea.style.display = 'block';
+      if (isAdminUser) {
+        adminTab.style.display = 'block';
+      }
+
+      // Tab Switching
+      myArticlesTab.addEventListener('click', () => {
+        myArticlesTab.classList.add('active');
+        adminTab.classList.remove('active');
+        currentView = 'user';
+        loadList();
+      });
+
+      adminTab.addEventListener('click', () => {
+        adminTab.classList.add('active');
+        myArticlesTab.classList.remove('active');
+        currentView = 'admin';
+        loadList();
+      });
+
+      // Handle Submit/Update
+      articleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جارٍ الحفظ...';
+        
+        try {
+          const tags = document.getElementById('artTags').value.split(',').map(t => t.trim()).filter(t => t);
+          const id = document.getElementById('artId').value;
+          
+          const newArt = {
+            title: document.getElementById('artTitle').value,
+            category: document.getElementById('artCategory').value,
+            tags: tags,
+            image: document.getElementById('artImage').value,
+            excerpt: document.getElementById('artExcerpt').value,
+            body: document.getElementById('artBody').value,
+            author_id: user.id,
+            author_name: user.name,
+            status: isAdminUser ? 'published' : 'pending' 
+          };
+
+          if (id) newArt.id = id;
+
+          await saveArticle(newArt);
+          showToast(id ? 'تم تحديث المقال بنجاح!' : 'تم تقديم المقال للمراجعة بنجاح!');
+          resetForm();
+          loadList();
+        } catch (err) {
+          showToast('خطأ: ' + err.message);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'حفظ ونشر المراجعة';
+        }
+      });
+
+      cancelEdit.addEventListener('click', resetForm);
+
+      function resetForm() {
+        articleForm.reset();
+        document.getElementById('artId').value = '';
+        submitBtn.textContent = 'حفظ ونشر المراجعة';
+        cancelEdit.style.display = 'none';
+        writeSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      async function loadList() {
+        articleList.innerHTML = '<p class="text-center p-4">جارٍ جلب البيانات الحقيقية...</p>';
+        
+        // Use async articles fetch
+        const filter = currentView === 'admin' 
+          ? { status: 'all' } 
+          : { author_id: user.id, status: 'all' };
+        
+        const articles = await getArticles(filter);
+
+        if (articles.length === 0) {
+          articleList.innerHTML = '<p class="text-center p-4 color-muted">لا توجد مقالات لعرضها.</p>';
+          return;
+        }
+
+        articleList.innerHTML = articles.map(art => {
+          const statusText = art.status === 'published' ? 'منشور' : art.status === 'pending' ? 'بانتظار المراجعة' : 'مرفوض';
+          const statusClass = `status-${art.status}`;
+          const cat = CATEGORIES.find(c => c.id === art.category);
+
+          return `
+            <div class="article-list-item" data-id="${art.id}">
+              <div>
+                <strong style="display:block; margin-bottom: 4px;">${art.title}</strong>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <small style="color: var(--text-muted); margin-right: 10px;">القسم: ${cat ? cat.name : art.category}</small>
+                ${currentView === 'admin' ? `<br><small style="color: var(--accent);">الكاتب: ${art.author_name}</small>` : ''}
+              </div>
+              <div class="article-list-actions">
+                ${currentView === 'admin' && art.status === 'pending' ? `
+                  <button class="btn-approve" data-id="${art.id}" data-action="published">✅ اعتماد</button>
+                  <button class="btn-delete" data-id="${art.id}" data-action="rejected">❌ رفض</button>
+                ` : ''}
+                <button class="btn-edit" data-id="${art.id}" data-action="edit">✏️ تعديل</button>
+                <button class="btn-delete" data-id="${art.id}" data-action="delete">🗑️ حذف</button>
+                <a href="article.html?id=${art.id}" class="btn-edit" style="text-decoration:none;">👁️ عرض</a>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Action Handlers
+        articleList.querySelectorAll('button[data-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const action = btn.dataset.action;
+
+            try {
+              if (action === 'delete') {
+                if (confirm('هل أنت متأكد من حذف هذا المقال نهائياً من قاعدة البيانات؟')) {
+                  await deleteArticle(id);
+                  showToast('تم حذف المقال بنجاح.');
+                  loadList();
+                }
+              } else if (action === 'published' || action === 'rejected') {
+                await moderateArticle(id, action);
+                showToast(action === 'published' ? 'تم اعتماد المقال ونشره.' : 'تم رفض المقال.');
+                loadList();
+              } else if (action === 'edit') {
+                const art = await getArticle(id);
+                if (art) {
+                  document.getElementById('artId').value = art.id;
+                  document.getElementById('artTitle').value = art.title;
+                  document.getElementById('artCategory').value = art.category;
+                  document.getElementById('artTags').value = (art.tags || []).join(', ');
+                  document.getElementById('artImage').value = art.image;
+                  document.getElementById('artExcerpt').value = art.excerpt;
+                  document.getElementById('artBody').value = art.body;
+                  
+                  submitBtn.textContent = 'تحديث المقال';
+                  cancelEdit.style.display = 'inline-block';
+                  writeSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            } catch (err) {
+              showToast('خطأ: ' + err.message);
+            }
+          });
+        });
+      }
+
+      await loadList();
+    }
+
+    renderFooter();
+  </script>
+</body>
+</html>
