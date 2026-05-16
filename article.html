@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- SEO & Social Sharing (OG Tags) -->
-  <title>مقال — مجلة فكر</title>
-  <meta name="description" content="مقال تحليلي في مجلة فكر">
+  <title>مقال — الصحيفة</title>
+  <meta name="description" content="مقال تحليلي في الصحيفة">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="مجلة فكر">
-  <meta property="og:title" content="مقال — مجلة فكر" id="ogTitle">
-  <meta property="og:description" content="مقال تحليلي في مجلة فكر" id="ogDesc">
+  <meta property="og:title" content="مقال — الصحيفة" id="ogTitle">
+  <meta property="og:description" content="مقال تحليلي في الصحيفة" id="ogDesc">
   <meta property="og:image" content="" id="ogImage">
   
   <!-- Supabase SDK -->
@@ -57,7 +57,7 @@
         container.innerHTML = '<div class="text-center p-4"><h3>المقال غير موجود</h3><a href="index.html" class="btn btn-primary mt-4">العودة للرئيسية</a></div>';
       } else {
         // 2. Update Page Metadata & OG Tags
-        document.title = `${post.title} — مجلة فكر`;
+        document.title = `${post.title} — الصحيفة`;
         document.querySelector('meta[name="description"]').content = post.excerpt;
         document.getElementById('ogTitle').content = post.title;
         document.getElementById('ogDesc').content = post.excerpt;

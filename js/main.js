@@ -67,8 +67,8 @@ export async function renderHeader() {
         <div class="container masthead-inner">
           <div class="masthead-date">${today}</div>
           <a href="index.html" class="masthead-logo">
-            <span class="logo-main">فِكر</span>
-            <span class="logo-sub">مجلة عربية مستقلة</span>
+            <img src="LOGO.png" alt="الصحيفة" class="site-logo">
+            <span class="logo-sub">جريدة عربية مستقلة</span>
           </a>
           <div class="masthead-actions">
             ${userActionsHTML}
@@ -93,7 +93,7 @@ export async function renderHeader() {
     <div class="mobile-overlay" id="mobileOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
       <div class="mobile-menu-header">
-        <span class="logo-main">فِكر</span>
+        <img src="LOGO.png" alt="الصحيفة" class="site-logo" style="height:40px;filter:brightness(0) invert(1)">
         <button class="mobile-close-btn" id="mobileCloseBtn">&times;</button>
       </div>
       <ul class="mobile-nav-links">
@@ -174,7 +174,9 @@ export async function renderFooter() {
       <div class="container footer-content">
         <div class="footer-grid">
           <div class="footer-col footer-brand">
-            <h3 class="footer-logo">فِكر</h3>
+            <div class="footer-logo">
+              <img src="LOGO.png" alt="الصحيفة" class="footer-logo-img">
+            </div>
             <p class="footer-tagline">منصة عربية مستقلة تُعنى بالتحليل الفكري والاقتصادي والاجتماعي.</p>
           </div>
           <div class="footer-col">
@@ -194,7 +196,7 @@ export async function renderFooter() {
         </div>
         <div class="footer-bottom">
           <div class="footer-bottom-rule"></div>
-          <p>© ${new Date().getFullYear()} مجلة فِكر — جميع الحقوق محفوظة</p>
+          <p>© ${new Date().getFullYear()} الصحيفة — جميع الحقوق محفوظة</p>
         </div>
       </div>
     </footer>
