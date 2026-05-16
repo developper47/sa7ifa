@@ -148,6 +148,18 @@ img {
   align-items: center;
   text-decoration: none;
   flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.site-logo {
+  height: 80px;
+  width: auto;
+  transition: transform 0.2s;
+  display: block;
+}
+
+.masthead-logo:hover .site-logo {
+  transform: scale(1.02);
 }
 
 .logo-main {
@@ -705,10 +717,14 @@ footer {
 
 
 .footer-logo {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
-  color: #fff;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer-logo-img {
+  height: 60px;
+  width: auto;
+  filter: brightness(0) invert(1); /* Make it white for the dark footer if it's a dark logo */
+  opacity: 0.9;
 }
 
 .footer-tagline { font-size: 0.9rem; line-height: 1.7; }

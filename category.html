@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="تصفح المقالات حسب القسم — مجلة فكر">
-  <title>القسم — مجلة فكر</title>
+  <meta name="description" content="تصفح المقالات حسب القسم — الصحيفة">
+  <title>القسم — الصحيفة</title>
   
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -55,7 +55,7 @@
         grid.innerHTML = '';
       } else {
         title.textContent = section.name_ar;
-        document.title = `${section.name_ar} — مجلة فكر`;
+        document.title = `${section.name_ar} — الصحيفة`;
         stripe.style.background = section.color;
         
         // 2. Fetch Posts for this section
