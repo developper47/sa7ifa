@@ -108,3 +108,33 @@ export async function getCurrentUser() {
 export function isAdmin(user) {
   return user && user.role === 'admin';
 }
+
+/**
+ * Request password reset email
+ */
+export async function sendPasswordResetEmail(email) {
+  try {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Update user password
+ */
+export async function updatePassword(newPassword) {
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    if (error) throw error;
+    return { success: true, user: data.user };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
