@@ -8,12 +8,12 @@
 /* ---- CSS VARIABLES ---- */
 :root {
   /* Paper & Ink Palette */
-  --paper: #fdfbf7;          /* Light cream paper background */
-  --paper-dark: #fcfaf2;     /* Editorial slightly darker warm paper */
-  --ink: #1a1a1a;            /* Deep black/charcoal ink */
-  --ink-mid: #2c2c2c;        /* Readable dark charcoal for paragraphs */
-  --ink-light: #555555;      /* Muted dark grey for meta details */
-  --ink-faint: #d3cfc4;      /* Soft beige-gray for editorial separation borders */
+  --paper: #EFECE4;          /* Soft, vintage newsprint color */
+  --paper-dark: #E5E2DA;     /* Editorial slightly darker warm paper */
+  --ink: #2B2B2B;            /* Deep charcoal/ink black */
+  --ink-mid: #2B2B2B;        /* Readable dark charcoal for paragraphs */
+  --ink-light: #4A4A4A;      /* Muted dark grey for meta details */
+  --ink-faint: #A09D94;      /* Soft beige-gray for editorial separation borders */
 
   /* Accent */
   --accent: #800020;         /* Bordeaux red classic */
@@ -23,10 +23,10 @@
   --accent-gold-light: #d4a017;
 
   /* Category Palette */
-  --cat-economy: var(--accent);
-  --cat-society: var(--accent-emerald);
-  --cat-news: #1e293b;
-  --cat-ideas: #8a6d3b;
+  --cat-ideas: #8e44ad;
+  --cat-economy: #2c3e50;
+  --cat-tech: #2980b9;
+  --cat-history: #d35400;
 
   /* Surface */
   --surface: #fdfbf7;        /* Match the cream background */

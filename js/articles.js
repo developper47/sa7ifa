@@ -3,13 +3,13 @@
  * Transitioned from LocalStorage to Supabase DB.
  */
 
-import { supabase } from './supabase.js';
+import { supabase } from './supabase.js?v=3.1';
 
 export const CATEGORIES = [
+  { id: 'ideas', name: 'فكر', color: 'var(--cat-ideas)', cssClass: 'cat-ideas' },
   { id: 'economy', name: 'اقتصاد', color: 'var(--cat-economy)', cssClass: 'cat-economy' },
-  { id: 'society', name: 'مجتمع', color: 'var(--cat-society)', cssClass: 'cat-society' },
-  { id: 'news', name: 'أخبار', color: 'var(--cat-news)', cssClass: 'cat-news' },
-  { id: 'ideas', name: 'فكر وأيديولوجيا', color: 'var(--cat-ideas)', cssClass: 'cat-ideas' }
+  { id: 'tech', name: 'تكنولوجيا', color: 'var(--cat-tech)', cssClass: 'cat-tech' },
+  { id: 'history', name: 'تاريخ', color: 'var(--cat-history)', cssClass: 'cat-history' }
 ];
 
 export function getCategoryById(id) {

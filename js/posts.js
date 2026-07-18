@@ -3,7 +3,7 @@
  * Replaces articles.js for the new editorial schema.
  */
 
-import { supabase } from './supabase.js';
+import { supabase } from './supabase.js?v=3.1';
 
 // Default fallback image if post has no featured image and site_settings is empty
 const HARD_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';

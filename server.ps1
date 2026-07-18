@@ -54,6 +54,9 @@ try {
             }
 
             $content = [System.IO.File]::ReadAllBytes($filePath)
+            $response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            $response.Headers.Add("Pragma", "no-cache")
+            $response.Headers.Add("Expires", "0")
             $response.ContentType = $contentType
             $response.ContentLength64 = $content.Length
             $response.OutputStream.Write($content, 0, $content.Length)
