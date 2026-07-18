@@ -3,9 +3,9 @@
 // Updated for the new editorial design with dynamic sections
 // ============================================================
 
-import { getCurrentUser, signOut } from './auth.js';
-import { getSections } from './sections.js';
-import { readingTime } from './posts.js';
+import { getCurrentUser, signOut } from './auth.js?v=3.1';
+import { getSections } from './sections.js?v=3.1';
+import { readingTime } from './posts.js?v=3.1';
 
 /**
  * Render the site header with dynamic section navigation.
@@ -60,46 +60,76 @@ export async function renderHeader() {
   }
 
   const today = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  let hijriDate = "";
+  try {
+    hijriDate = new Intl.DateTimeFormat('ar-EG-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) + " هـ";
+  } catch (e) {
+    hijriDate = "٢٤ محرم ١٤٤٨ هـ";
+  }
 
   const headerHTML = `
     <header class="site-header">
-      <div class="masthead-top">
-        <div class="container masthead-inner">
-          <div class="masthead-date">${today}</div>
-          <a href="index.html" class="masthead-logo">
-            <img src="LOGO.png" alt="الصحيفة" class="site-logo">
-            <span class="logo-sub">جريدة عربية مستقلة</span>
-          </a>
-          <div class="masthead-actions">
+      <!-- Utility bar at top for auth buttons -->
+      <div class="utility-top-bar">
+        <div class="container utility-inner">
+          <div class="utility-actions">
             ${userActionsHTML}
           </div>
         </div>
       </div>
-      <nav class="main-nav">
+
+      <!-- Main majestic broadsheet masthead -->
+      <div class="masthead-main">
+        <div class="container masthead-grid">
+          <!-- Right Column Metadata -->
+          <div class="masthead-meta-box masthead-meta-box--right">
+            <div class="meta-item">القاهرة</div>
+            <div class="meta-item">جريدة مستقلة للفكر الحر</div>
+            <div class="meta-item">تأسست عام ٢٠٢٦ م</div>
+          </div>
+
+          <!-- Center Logo -->
+          <a href="index.html" class="masthead-logo-container">
+            <h1 class="broadsheet-logo-title">الصحيفة</h1>
+            <span class="logo-subtitle">منبر الكلمة الحرة والفكر المستنير</span>
+          </a>
+
+          <!-- Left Column Metadata -->
+          <div class="masthead-meta-box masthead-meta-box--left">
+            <div class="meta-item">${today}</div>
+            <div class="meta-item">${hijriDate}</div>
+            <div class="meta-item">العدد الأول • إصدار تجريبي</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="broadsheet-double-line"></div>
+
+      <!-- Broadsheet Parallel Line Navigation -->
+      <nav class="main-nav-broadsheet">
         <div class="container">
-          <ul class="nav-links" id="navLinks">
+          <ul class="nav-links-broadsheet" id="navLinks">
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
-            <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن المجلة</a></li>
+            <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
-          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="القائمة">
-            <span></span><span></span><span></span>
-          </button>
         </div>
       </nav>
+
+      <div class="broadsheet-double-line"></div>
     </header>
 
     <!-- Mobile Side Menu -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
       <div class="mobile-menu-header">
-        <img src="LOGO.png" alt="الصحيفة" class="site-logo" style="height:40px;filter:brightness(0) invert(1)">
+        <h2 style="font-family: var(--font-serif); color: var(--paper); margin: 0;">الصحيفة</h2>
         <button class="mobile-close-btn" id="mobileCloseBtn">&times;</button>
       </div>
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
         ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${s.icon || ''} ${s.name_ar}</a></li>`).join('')}
-        <li><a href="about.html">عن المجلة</a></li>
+        <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">
         ${user
@@ -227,6 +257,7 @@ export function renderPostCard(post, variant = 'default') {
             <div class="post-card__img-overlay"></div>
             <span class="post-card__section" style="background:${sectionColor}">${sectionName}</span>
           </div>
+          <span class="post-card__image-caption">تصوير الأرشيف الصحفي • لقطة متعلقة بالخبر الرئيسي</span>
         </a>
         <div class="post-card__body">
           <h2 class="post-card__title post-card__title--lg">
@@ -252,6 +283,7 @@ export function renderPostCard(post, variant = 'default') {
           <img src="${img}" alt="${post.title}" loading="lazy">
           <span class="post-card__section" style="background:${sectionColor}">${sectionName}</span>
         </div>
+        <span class="post-card__image-caption">الأرشيف الصحفي • ${sectionName}</span>
       </a>
       <div class="post-card__body">
         <h3 class="post-card__title">

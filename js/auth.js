@@ -4,9 +4,9 @@
  * [LOCAL BYPASS ENABLED FOR ADMIN]
  */
 
-import { supabase } from './supabase.js';
+import { supabase } from './supabase.js?v=3.1';
 
-const MOCK_ADMIN_EMAIL = 'admin@magazine.com';
+const MOCK_ADMIN_EMAIL = 'developper47@gmail.com';
 const MOCK_ADMIN_PASS = 'admin123';
 const MOCK_SESSION_KEY = 'magazine_mock_session';
 
@@ -36,7 +36,7 @@ export async function signIn(email, password) {
     const mockUser = {
       id: '00000000-0000-0000-0000-000000000000', // Valid UUID format
       email: MOCK_ADMIN_EMAIL,
-      name: 'أحمد المدير',
+      name: 'رئيس التحرير',
       role: 'admin'
     };
     localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(mockUser));
