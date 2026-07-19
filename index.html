@@ -9,23 +9,14 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <link rel="stylesheet" href="css/style.css?v=3.2">
-  <link rel="stylesheet" href="css/pages.css?v=3.2">
+  <link rel="stylesheet" href="css/style.css?v=3.3">
+  <link rel="stylesheet" href="css/pages.css?v=3.3">
 </head>
 <body>
   <!-- Header and Footer are injected by main.js -->
 
   <main class="main-content">
     <div class="container">
-      
-      <!-- Editorial Date Line -->
-      <div class="home-masthead-rule">
-        <span>العدد الأول</span>
-        <span style="margin: 0 1.5rem;">•</span>
-        <span>إصدار تجريبي</span>
-        <span style="margin: 0 1.5rem;">•</span>
-        <span>جريدة مستقلة للفكر الحر</span>
-      </div>
 
       <!-- Breaking Bar / Ticker -->
       <div class="breaking-bar" id="breakingBar">
@@ -35,7 +26,7 @@
 
       <!-- Vintage Asymmetrical Broadsheet Grid -->
       <div class="vintage-broadsheet-grid">
-        <!-- Right Column: 22% Breaking news -->
+        <!-- Right Column: 22% Latest Articles -->
         <aside class="broadsheet-col broadsheet-col--breaking">
           <h3>آخر المقالات</h3>
           <div id="breakingList">
@@ -66,55 +57,135 @@
         </aside>
       </div>
 
-      <!-- Dynamic Section Blocks -->
+      <!-- Dynamic Section Blocks — Newspaper Page Layout -->
       <div id="sectionsContainer">
-        <!-- Sections and their posts injected here -->
+        <!-- Sections injected here -->
       </div>
 
     </div>
   </main>
 
   <script type="module">
-    import { renderHeader, renderFooter, renderPostCard, renderPostRow } from './js/main.js?v=3.2';
-    import { getPosts } from './js/posts.js?v=3.2';
-    import { getSections } from './js/sections.js?v=3.2';
+    import { renderHeader, renderFooter, renderPostCard, toArabicNumerals, getViewCount } from './js/main.js?v=3.3';
+    import { getPosts, readingTime } from './js/posts.js?v=3.3';
+    import { getSections } from './js/sections.js?v=3.3';
+
+    // ---- Arabic Gregorian months (Maghrebi) ----
+    const MONTHS = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const toAr = s => String(s).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+    const fmtDate = d => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return `${toAr(dt.getDate())} ${MONTHS[dt.getMonth()]} ${toAr(dt.getFullYear())}`;
+    };
+
+    // ---- Render a section in authentic newspaper multi-column layout ----
+    function renderNewspaperSection(section, posts) {
+      if (!posts || posts.length === 0) return '';
+      const [main, second, third] = posts;
+      const color = section.color || 'var(--ink)';
+
+      function articleImg(p, h = 160) {
+        const src = p.featured_image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+        return `<a href="article.html?id=${p.id}" class="nps-img-link">
+          <img src="${src}" alt="${p.title}" style="width:100%;height:${h}px;object-fit:cover;filter:grayscale(100%) contrast(138%) brightness(95%);border:1px solid var(--ink);display:block;">
+          <span class="nps-img-caption">الأرشيف الصحفي • ${section.name_ar}</span>
+        </a>`;
+      }
+
+      // Main article (left-spanning big column)
+      const mainHTML = `
+        <div class="nps-col nps-col--main">
+          ${articleImg(main, 200)}
+          <h3 class="nps-title nps-title--main">
+            <a href="article.html?id=${main.id}">${main.title}</a>
+          </h3>
+          <p class="nps-excerpt">${main.excerpt || ''}</p>
+          <div class="nps-meta">
+            <span>${fmtDate(main.published_at || main.created_at)}</span>
+            <span class="nps-sep">·</span>
+            <span>${toAr(readingTime(main.content))} د قراءة</span>
+            <span class="nps-sep">·</span>
+            <span>◎ ${toAr(getViewCount(main.id))}</span>
+          </div>
+        </div>
+      `;
+
+      // Secondary articles
+      const secondHTML = second ? `
+        <div class="nps-col nps-col--secondary">
+          ${articleImg(second, 130)}
+          <h4 class="nps-title nps-title--secondary">
+            <a href="article.html?id=${second.id}">${second.title}</a>
+          </h4>
+          <p class="nps-excerpt nps-excerpt--sm">${(second.excerpt || '').substring(0, 120)}…</p>
+          <div class="nps-meta">${fmtDate(second.published_at || second.created_at)}</div>
+        </div>
+      ` : '';
+
+      const thirdHTML = third ? `
+        <div class="nps-col nps-col--tertiary">
+          <h4 class="nps-title nps-title--secondary">
+            <a href="article.html?id=${third.id}">${third.title}</a>
+          </h4>
+          <p class="nps-excerpt nps-excerpt--sm">${(third.excerpt || '').substring(0, 100)}…</p>
+          <div class="nps-meta">${fmtDate(third.published_at || third.created_at)}</div>
+          <div style="margin-top: 0.8rem; border-top: 1px dashed var(--ink-faint); padding-top: 0.8rem;">
+            <a href="category.html?section=${section.slug}" class="nps-more-link">تصفح القسم →</a>
+          </div>
+        </div>
+      ` : `
+        <div class="nps-col nps-col--tertiary">
+          <a href="category.html?section=${section.slug}" class="nps-more-link">تصفح القسم →</a>
+        </div>
+      `;
+
+      return `
+        <section class="newspaper-section">
+          <!-- Section Header — Ink bar with section name -->
+          <div class="nps-header" style="border-color: ${color}; background: ${color};">
+            <span class="nps-header__ornament">❧</span>
+            <h2 class="nps-header__title">${section.name_ar}</h2>
+            <span class="nps-header__ornament">❧</span>
+          </div>
+          <!-- 3-column newspaper grid -->
+          <div class="nps-grid">
+            ${mainHTML}
+            ${secondHTML}
+            ${thirdHTML}
+          </div>
+        </section>
+      `;
+    }
 
     (async () => {
-      // 1. Initial renders
       await renderHeader();
 
-      // 2. Fetch data
       const [allPosts, sections] = await Promise.all([
         getPosts({ status: 'published', limit: 20 }),
         getSections()
       ]);
 
-      const formatShortDate = (d) => {
-        if (!d) return '';
-        return new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
-      };
-
-      // 3. Render Hero (Latest Featured or just Latest)
+      // 1. Hero (featured)
       const heroContainer = document.getElementById('heroContainer');
       const featured = allPosts.find(p => p.is_featured) || allPosts[0];
-      
       if (featured) {
         heroContainer.innerHTML = renderPostCard(featured, 'featured');
       } else {
         heroContainer.innerHTML = '<p class="text-center p-4">لا توجد مقالات منشورة بعد.</p>';
       }
 
-      // 4. Render Right Column: Breaking News (Latest 4 posts, excluding featured)
+      // 2. Latest articles column (right)
       const breakingList = document.getElementById('breakingList');
       const breakingPosts = allPosts.filter(p => p.id !== featured?.id).slice(0, 4);
       breakingList.innerHTML = breakingPosts.map(p => `
         <div class="broadsheet-news-item">
           <h4><a href="article.html?id=${p.id}">${p.title}</a></h4>
-          <time>${formatShortDate(p.published_at || p.created_at)}</time>
+          <time>${fmtDate(p.published_at || p.created_at)}</time>
         </div>
       `).join('');
 
-      // 5. Render Left Column: Opinions (Other posts)
+      // 3. Editorial opinion column (left)
       const opinionList = document.getElementById('opinionList');
       const opinionPosts = allPosts.filter(p => p.id !== featured?.id && !breakingPosts.some(bp => bp.id === p.id)).slice(0, 3);
       if (opinionPosts.length > 0) {
@@ -128,32 +199,20 @@
         opinionList.innerHTML = '<p class="text-center p-4" style="font-size:0.8rem;color:var(--ink-light)">تابعونا في الأعداد القادمة...</p>';
       }
 
-      // 6. Render Section Blocks
+      // 4. Section blocks — newspaper page layout
       const sectionsContainer = document.getElementById('sectionsContainer');
       let sectionsHTML = '';
-
       for (const section of sections) {
         const sectionPosts = allPosts.filter(p => p.section_id === section.id).slice(0, 3);
         if (sectionPosts.length === 0) continue;
-
-        sectionsHTML += `
-          <section class="section-block">
-            <div class="section-rule">
-              <h2 class="section-rule__label">${section.icon || ''} ${section.name_ar}</h2>
-              <a href="category.html?section=${section.slug}" class="section-rule__link" style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--accent);">تصفح القسم ←</a>
-            </div>
-            <div class="section-posts-newspaper">
-              ${sectionPosts.map(p => renderPostCard(p)).join('')}
-            </div>
-          </section>
-        `;
+        sectionsHTML += renderNewspaperSection(section, sectionPosts);
       }
-      sectionsContainer.innerHTML = sectionsHTML;
+      sectionsContainer.innerHTML = sectionsHTML || '<p class="text-center p-4">لا توجد أقسام بعد.</p>';
 
-      // 7. News Ticker (Titles only)
+      // 5. News Ticker
       const tickerTrack = document.getElementById('tickerTrack');
       tickerTrack.innerHTML = allPosts.slice(0, 8).map(p => `
-        <span style="margin: 0 2rem;">🔹 ${p.title}</span>
+        <span style="margin: 0 2rem;">◆ ${p.title}</span>
       `).join('');
 
       renderFooter();

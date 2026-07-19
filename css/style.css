@@ -63,12 +63,12 @@ html {
 }
 
 body {
-  background-color: var(--paper);
+  background-color: #C4BAA0; /* dark surround — looks like a desk around the newspaper */
   color: var(--ink);
   font-family: var(--font-body);
   line-height: 1.8;
   direction: rtl;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
 }
 
 /* Custom Scrollbar */
@@ -112,20 +112,54 @@ img {
 }
 
 .main-content {
-  margin-top: calc(var(--header-height) + 4rem);
-  min-height: calc(100vh - var(--header-height) - 100px);
-  padding-bottom: 6rem;
+  margin-top: 0; /* sticky header no longer needs offset */
+  min-height: calc(100vh - 80px);
+  padding-bottom: 4rem;
   overflow-x: hidden;
+  /* Newspaper page: paper texture + page-edge shadows */
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(
+      transparent 0px,
+      transparent 26px,
+      rgba(43,43,43,0.028) 26px,
+      rgba(43,43,43,0.028) 27px
+    );
+  box-shadow:
+    -8px 0 24px rgba(0,0,0,0.18),
+     8px 0 24px rgba(0,0,0,0.18),
+     0 6px 20px rgba(0,0,0,0.1);
+  position: relative;
 }
+/* Left/Right page-edge darkening effect */
+.main-content::before,
+.main-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  pointer-events: none;
+  z-index: 1;
+}
+.main-content::before {
+  right: 0;
+  background: linear-gradient(to left, rgba(0,0,0,0.06), transparent);
+}
+.main-content::after {
+  left: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
+}
+
 
 /* ---- SITE HEADER (Global Navigation) ---- */
 .site-header {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000;
-  background: var(--surface);
+  background: var(--paper);
   border-bottom: var(--border-rule-dark);
 }
 
@@ -665,7 +699,6 @@ select.form-control { appearance: none; cursor: pointer; }
 }
 
 @media (max-width: 900px) {
-  .site-header { position: fixed; }
   .mobile-menu-btn { display: flex; z-index: 1001; }
   .nav-links { display: none; }
   .masthead-inner { padding: 0.5rem 0; }
