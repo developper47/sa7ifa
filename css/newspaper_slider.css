@@ -1,0 +1,710 @@
+
+/* ============================================================
+   NEWSPAPER SLIDER — Full-page horizontal section slider
+   ============================================================ */
+
+/* ── Slider container ───────────────────────────────────── */
+.nws-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #C4BAA0; /* outer desk color */
+}
+
+/* ── Track (moves horizontally) ─────────────────────────── */
+.nws-track {
+  display: flex;
+  height: 100%;
+  /* RTL: slides go from right to left visually */
+  transform: translateX(0%);
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* ── Individual slide ────────────────────────────────────── */
+.nws-slide {
+  min-width: 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── Newspaper page — the white/cream inner area ─────────── */
+.nws-page {
+  flex: 1;
+  min-height: 0;
+  background: #F4F1EA;
+  background-image:
+    repeating-linear-gradient(
+      transparent 0px, transparent 26px,
+      rgba(43,43,43,0.03) 26px, rgba(43,43,43,0.03) 27px
+    );
+  border: 3px double #2B2B2B;
+  margin: 0 2px 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  /* Page shadow */
+  box-shadow: inset 0 0 0 4px #F4F1EA, inset 0 0 0 5px rgba(43,43,43,0.12);
+}
+.nws-page::-webkit-scrollbar { width: 5px; }
+.nws-page::-webkit-scrollbar-thumb { background: rgba(43,43,43,0.25); }
+
+/* ── Section band (top strip per slide) ─────────────────── */
+.nws-band {
+  border-top: 3px double #2B2B2B;
+  border-bottom: 3px double #2B2B2B;
+  background: #F4F1EA;
+  padding: 0.4rem 1.25rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(244,241,234,0.95);
+  backdrop-filter: blur(4px);
+}
+.nws-band-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+.nws-band-name {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.nws-band-rule { flex: 1; height: 1px; background: currentColor; opacity: 0.3; }
+.nws-band-ornament { font-size: 1rem; color: #2B2B2B; opacity: 0.4; }
+.nws-band-link {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+.nws-band-link:hover { opacity: 0.7; }
+
+/* ── Navigation Arrows ──────────────────────────────────── */
+.nws-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  background: rgba(244,241,234,0.95);
+  border: 2px solid #2B2B2B;
+  color: #2B2B2B;
+  font-size: 2.5rem;
+  line-height: 1;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: serif;
+  padding: 0;
+}
+.nws-arrow:hover { background: #2B2B2B; color: #F4F1EA; }
+.nws-arrow--prev { right: 0.75rem; }
+.nws-arrow--next { left: 0.75rem; }
+
+/* ── Section badge (top right) ──────────────────────────── */
+.nws-section-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 4rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  padding: 0.15rem 0.6rem;
+  background: rgba(244,241,234,0.9);
+  z-index: 60;
+}
+
+/* ── Dot navigation ─────────────────────────────────────── */
+.nws-dots {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  z-index: 60;
+}
+.nws-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--dot-color, #2B2B2B);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  padding: 0;
+}
+.nws-dot--active {
+  background: var(--dot-color, #2B2B2B);
+  transform: scale(1.3);
+}
+
+/* ── Slide counter ──────────────────────────────────────── */
+.nws-counter {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: rgba(43,43,43,0.5);
+  z-index: 60;
+  letter-spacing: 0.05em;
+}
+
+/* ── Loading screen ─────────────────────────────────────── */
+.nws-loading {
+  position: absolute;
+  inset: 0;
+  background: #F4F1EA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  transition: opacity 0.5s ease;
+}
+.nws-loading-inner { text-align: center; }
+.nws-loading-logo {
+  font-family: var(--font-serif);
+  font-size: 4rem;
+  font-weight: 700;
+  color: #2B2B2B;
+  letter-spacing: 0.1em;
+}
+.nws-loading-rule { width: 200px; height: 3px; background: #2B2B2B; margin: 0.5rem auto; }
+.nws-loading-text {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: #4A4A4A;
+  margin-top: 0.5rem;
+}
+.nws-loading-dots { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; }
+.nws-loading-dots span {
+  width: 8px; height: 8px; background: #2B2B2B; border-radius: 50%;
+  animation: loadpulse 1.2s infinite ease-in-out;
+}
+.nws-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.nws-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes loadpulse { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+
+/* ============================================================
+   ARTICLE CARDS (na = newspaper article)
+   ============================================================ */
+
+.na {
+  padding: 0.75rem 0.8rem;
+  overflow: hidden;
+}
+
+/* Image + text row (img on right in RTL) */
+.na--row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.na--row .na-img-wrap { flex: 0 0 42%; max-width: 42%; }
+.na--row .na-text { flex: 1; min-width: 0; }
+
+/* Image on left in RTL (row-reverse) */
+.na--row-rev {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.na--row-rev .na-img-wrap { flex: 0 0 42%; max-width: 42%; }
+.na--row-rev .na-text { flex: 1; min-width: 0; }
+
+/* Image top (centered above text) */
+.na--top {
+  display: flex;
+  flex-direction: column;
+}
+.na--top .na-img-wrap { width: 100%; }
+
+/* Text-only */
+.na--text-only { display: block; }
+.na--sm .na-title { font-size: 0.95rem; }
+
+/* ── Image ──────────────────────────────────────────────── */
+.na-img-wrap { position: relative; }
+.na-img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  border: 1px solid #2B2B2B;
+  /* Halftone B&W newspaper print effect */
+  filter: grayscale(100%) contrast(140%) brightness(95%);
+}
+.na-img-cap {
+  display: block;
+  font-style: italic;
+  font-size: 0.65rem;
+  color: #4A4A4A;
+  padding: 0.15rem 0.4rem;
+  background: #E5E2DA;
+  border: 1px solid rgba(43,43,43,0.2);
+  border-top: none;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* ── Text block ─────────────────────────────────────────── */
+.na-text { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.na-text-label {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ink-faint);
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.na-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+}
+.na-title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: right;
+  line-height: inherit;
+  transition: color 0.2s;
+}
+.na-title-btn:hover { color: var(--accent); }
+
+.na-excerpt {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #2B2B2B;
+  text-align: justify;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+
+.na-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.na-more {
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid currentColor;
+  transition: color 0.2s;
+}
+.na-more:hover { color: var(--accent-hover); }
+.na-author {
+  font-size: 0.65rem;
+  color: #4A4A4A;
+  font-style: italic;
+}
+
+
+/* ============================================================
+   TEMPLATE 1 — Asymmetric Hero Grid
+   ============================================================ */
+.tpl-1 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.tpl1-top {
+  flex: 0 0 52%;
+  border-bottom: 3px double #2B2B2B;
+  overflow: hidden;
+}
+.tpl1-top-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem 0.25rem;
+  height: 100%;
+}
+.tpl1-top .na--top .na-img { max-height: 200px; }
+.tpl1-top .na-title { font-size: 1.5rem; }
+.tpl1-top .na-excerpt { -webkit-line-clamp: 3; }
+
+.tpl1-bottom {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  overflow: hidden;
+}
+.tpl1-col {
+  padding: 0;
+  overflow: hidden;
+}
+.tpl1-col + .tpl1-col { border-right: 1px solid #2B2B2B; }
+.tpl1-col--b { background: #EEEBE3; } /* middle column slightly shaded */
+
+
+/* ============================================================
+   TEMPLATE 2 — Balanced 2×2 Grid
+   ============================================================ */
+.tpl-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100%;
+  gap: 0;
+}
+.tpl2-quad {
+  overflow: hidden;
+  position: relative;
+}
+/* Borders */
+.tpl2-quad--tr { border-left: 1px solid #2B2B2B; border-bottom: 3px double #2B2B2B; }
+.tpl2-quad--tl { border-bottom: 3px double #2B2B2B; }
+.tpl2-quad--br { border-left: 1px solid #2B2B2B; }
+.tpl2-quad--bl { background: #EEEBE3; }
+
+
+/* ============================================================
+   TEMPLATE 3 — Editorial Magazine Column
+   ============================================================ */
+.tpl-3 {
+  display: grid;
+  grid-template-columns: 58% 42%;
+  height: 100%;
+  gap: 0;
+}
+.tpl3-main {
+  border-left: 3px double #2B2B2B;
+  overflow: hidden;
+  padding: 0;
+}
+.tpl3-main .na--top .na-img { max-height: 230px; }
+.tpl3-main .na-title { font-size: 1.4rem; }
+.tpl3-main .na-excerpt { -webkit-line-clamp: 6; }
+
+.tpl3-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #F0EDE5;
+}
+.tpl3-item {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.tpl3-item--last { flex: 0 0 auto; }
+.tpl3-divider {
+  height: 1px;
+  background: #2B2B2B;
+  margin: 0 0.8rem;
+  flex-shrink: 0;
+}
+
+
+/* ============================================================
+   ARTICLE MODAL — Double-page Book Spread
+   ============================================================ */
+.nws-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.nws-modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.nws-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30,25,18,0.75);
+  backdrop-filter: blur(3px);
+}
+
+/* The "open book" spread */
+.nws-modal-spread {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  width: min(92vw, 1100px);
+  height: min(88vh, 700px);
+  background: #F4F1EA;
+  border: 3px double #2B2B2B;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.4),
+    0 0 0 8px #E5E2DA,
+    0 0 0 9px #2B2B2B;
+  transform: scale(0.92) translateY(20px);
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  overflow: hidden;
+}
+.nws-modal.open .nws-modal-spread {
+  transform: scale(1) translateY(0);
+}
+
+/* Left page: visual side */
+.nws-modal-page--left {
+  width: 38%;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: #EEEBE3;
+  background-image: repeating-linear-gradient(
+    transparent 0px, transparent 26px,
+    rgba(43,43,43,0.03) 26px, rgba(43,43,43,0.03) 27px
+  );
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-left: 3px double #2B2B2B;
+}
+
+/* Spine */
+.nws-modal-spine {
+  width: 6px;
+  background: linear-gradient(to left, rgba(0,0,0,0.15), rgba(0,0,0,0.05), rgba(0,0,0,0.15));
+  flex-shrink: 0;
+}
+
+/* Right page: content side */
+.nws-modal-page--right {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 1.5rem 2rem;
+  background: #F4F1EA;
+  background-image: repeating-linear-gradient(
+    transparent 0px, transparent 26px,
+    rgba(43,43,43,0.025) 26px, rgba(43,43,43,0.025) 27px
+  );
+}
+.nws-modal-page--right::-webkit-scrollbar { width: 5px; }
+.nws-modal-page--right::-webkit-scrollbar-thumb { background: rgba(43,43,43,0.3); }
+.nws-modal-page--left::-webkit-scrollbar { width: 5px; }
+.nws-modal-page--left::-webkit-scrollbar-thumb { background: rgba(43,43,43,0.2); }
+
+/* Close button — styled as stamp */
+.nws-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 2px solid #2B2B2B;
+  background: #F4F1EA;
+  color: #2B2B2B;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: all 0.2s;
+  font-family: serif;
+  /* Stamp effect */
+  box-shadow: 1px 1px 0 #2B2B2B, 2px 2px 0 rgba(43,43,43,0.2);
+}
+.nws-modal-close:hover { background: #2B2B2B; color: #F4F1EA; }
+
+/* Modal left page content */
+.nws-ml-top { text-align: center; }
+.nws-ml-section {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.nws-ml-rule { width: 60px; height: 2px; background: var(--accent); margin: 0.4rem auto; }
+.nws-ml-img-wrap { overflow: hidden; border: 2px solid #2B2B2B; }
+.nws-ml-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(100%) contrast(135%) brightness(95%);
+  transition: filter 0.3s;
+}
+.nws-ml-img:hover { filter: grayscale(0%) contrast(100%) brightness(100%); }
+.nws-ml-meta {
+  font-size: 0.78rem;
+  color: #4A4A4A;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-top: 1px dashed rgba(43,43,43,0.3);
+  padding-top: 0.75rem;
+}
+.nws-ml-ornament {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: rgba(43,43,43,0.5);
+  text-align: center;
+  border-top: 1px dashed rgba(43,43,43,0.3);
+  border-bottom: 1px dashed rgba(43,43,43,0.3);
+  padding: 0.35rem;
+}
+.nws-ml-link {
+  display: block;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  padding: 0.4rem;
+  transition: all 0.2s;
+}
+.nws-ml-link:hover { background: var(--accent); color: #fff; }
+
+/* Modal right page content */
+.nws-mr-section-header {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.nws-mr-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #2B2B2B;
+  margin-bottom: 0.5rem;
+}
+.nws-mr-rule {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to left, transparent, #2B2B2B 20%, #2B2B2B 80%, transparent);
+  margin-bottom: 1rem;
+}
+.nws-mr-body {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: #2B2B2B;
+  text-align: justify;
+  columns: 2;
+  column-gap: 1.5rem;
+  column-rule: 1px solid rgba(43,43,43,0.15);
+}
+.nws-mr-body p { margin-bottom: 0.8rem; }
+.nws-mr-body .lettrine { font-size: 3.5em; float: right; line-height: 0.8; margin-left: 0.2em; font-family: var(--font-serif); color: var(--accent); }
+
+
+/* ============================================================
+   RESPONSIVE — Mobile
+   ============================================================ */
+@media (max-width: 767px) {
+
+  /* Slider preserved — slides stacked horizontally */
+  .nws-arrow { width: 2.2rem; height: 2.2rem; font-size: 1.8rem; }
+  .nws-arrow--prev { right: 0.3rem; }
+  .nws-arrow--next { left: 0.3rem; }
+
+  /* ── Mobile: all templates collapse to single column ── */
+  .tpl-1, .tpl-2, .tpl-3 {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .tpl1-top, .tpl1-bottom,
+  .tpl2-quad, .tpl3-main, .tpl3-sidebar {
+    width: 100% !important;
+    flex: unset !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(43,43,43,0.2) !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+  .tpl1-bottom { display: flex !important; flex-direction: column !important; }
+  .tpl1-col + .tpl1-col { border-right: none !important; border-top: 1px solid rgba(43,43,43,0.15) !important; }
+
+  /* Cards: all go vertical (img top) */
+  .na--row, .na--row-rev {
+    flex-direction: column !important;
+  }
+  .na--row .na-img-wrap,
+  .na--row-rev .na-img-wrap {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: unset !important;
+  }
+  .na-img { height: 140px !important; }
+
+  /* Modal → single column */
+  .nws-modal-spread {
+    flex-direction: column !important;
+    width: 95vw !important;
+    height: 90vh !important;
+  }
+  .nws-modal-page--left {
+    width: 100% !important;
+    max-height: 240px !important;
+    border-left: none !important;
+    border-bottom: 3px double #2B2B2B !important;
+  }
+  .nws-modal-spine { display: none; }
+  .nws-ml-img { height: 130px !important; }
+  .nws-mr-body { columns: 1 !important; }
+  .nws-mr-title { font-size: 1.2rem !important; }
+}
+
+@media (max-width: 480px) {
+  .nws-band-ornament { display: none; }
+  .nws-band-name { font-size: 1rem; }
+  .nws-section-badge { display: none; }
+}
