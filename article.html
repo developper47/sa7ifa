@@ -16,8 +16,8 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <link rel="stylesheet" href="css/style.css?v=2.0">
-  <link rel="stylesheet" href="css/pages.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/pages.css?v=3.2">
 </head>
 <body>
   <!-- Header and Footer are injected by main.js -->
@@ -31,8 +31,8 @@
   </main>
 
   <script type="module">
-    import { renderHeader, renderFooter, shareOnFacebook, showToast } from './js/main.js?v=3.1';
-    import { getPostBySlug, getPost, formatDate, readingTime } from './js/posts.js?v=3.1';
+    import { renderHeader, renderFooter, shareOnFacebook, showToast, incrementViewCount, getViewCount, toggleFavorite, isFavorite, toArabicNumerals, formatArabicDate } from './js/main.js?v=3.2';
+    import { getPostBySlug, getPost, readingTime } from './js/posts.js?v=3.1';
     import { getCurrentUser } from './js/auth.js?v=3.1';
     import { getComments, addComment, renderCommentsHTML } from './js/comments.js?v=3.1';
 
@@ -56,7 +56,10 @@
       if (!post) {
         container.innerHTML = '<div class="text-center p-4"><h3>المقال غير موجود</h3><a href="index.html" class="btn btn-primary mt-4">العودة للرئيسية</a></div>';
       } else {
-        // 2. Update Page Metadata & OG Tags
+        // 2. Increment & get view count
+        const views = incrementViewCount(post.id);
+
+        // 3. Update Page Metadata & OG Tags
         document.title = `${post.title} — الصحيفة`;
         document.querySelector('meta[name="description"]').content = post.excerpt;
         document.getElementById('ogTitle').content = post.title;
@@ -66,9 +69,12 @@
         const section = post.sections || { name_ar: 'عام', color: '#1a1a1a' };
         const initial = post.author_name ? post.author_name.charAt(0) : '؟';
         const rtime = readingTime(post.content);
+        const dateStr = formatArabicDate(post.published_at || post.created_at);
+        const favState = user ? isFavorite(post.id) : false;
+
         const fbIcon = `<svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`;
 
-        // 3. Render Article
+        // 4. Render Article — image is inline (newspaper style, floated)
         container.innerHTML = `
           <header class="article-page__header">
             <span class="article-page__section-badge" style="background:${section.color}">${section.name_ar}</span>
@@ -80,20 +86,28 @@
                 <span>${post.author_name}</span>
               </div>
               <span class="post-card__sep">·</span>
-              <time>${formatDate(post.published_at || post.created_at)}</time>
+              <time>${dateStr}</time>
               <span class="post-card__sep">·</span>
-              <span>${rtime} دقائق قراءة</span>
+              <span>${toArabicNumerals(rtime)} دقائق قراءة</span>
+              <span class="post-card__sep">·</span>
+              <span class="view-count" title="عدد المشاهدات">◎ ${toArabicNumerals(views)} مشاهدة</span>
               
-              <button class="fb-share-btn" id="fbShareTop" style="margin-right: auto;">
-                ${fbIcon}
-                مشاركة
-              </button>
+              <div style="display:flex; gap:0.5rem; margin-right: auto; flex-wrap: wrap;">
+                <button class="fb-share-btn" id="fbShareTop">
+                  ${fbIcon}
+                  مشاركة
+                </button>
+                ${user ? `<button class="fav-btn ${favState ? 'is-fav' : ''}" id="favBtn" data-post-id="${post.id}">
+                  ${favState ? '♥' : '♡'} ${favState ? 'محفوظ' : 'أضف للمفضلة'}
+                </button>` : ''}
+              </div>
             </div>
           </header>
 
-          <img class="article-page__cover" src="${post.featured_image_url}" alt="${post.title}">
-
           <div class="article-page__body">
+            <!-- Inline newspaper-style image with caption -->
+            <img class="article-page__cover" src="${post.featured_image_url}" alt="${post.title}" loading="lazy">
+            <span class="article-page__cover-caption">الأرشيف الصحفي • ${section.name_ar} • ${dateStr}</span>
             ${post.content}
           </div>
 
@@ -134,12 +148,23 @@
           </section>
         `;
 
-        // 4. Attach Event Handlers
+        // 5. Attach Event Handlers
         const shareArticle = () => shareOnFacebook(window.location.href, post.title);
         document.getElementById('fbShareTop').onclick = shareArticle;
         document.getElementById('fbShareBottom').onclick = shareArticle;
 
-        // 5. Comments Logic
+        // Favorites button
+        const favBtn = document.getElementById('favBtn');
+        if (favBtn) {
+          favBtn.onclick = () => {
+            const added = toggleFavorite(post.id);
+            favBtn.classList.toggle('is-fav', added);
+            favBtn.innerHTML = added ? '♥ محفوظ' : '♡ أضف للمفضلة';
+            showToast(added ? 'أُضيف المقال إلى مفضلتك' : 'حُذف المقال من مفضلتك');
+          };
+        }
+
+        // 6. Comments Logic
         const loadComments = async () => {
           const list = document.getElementById('commentsList');
           const comments = await getComments(post.id);
@@ -150,7 +175,6 @@
             btn.onclick = () => {
               const pid = btn.dataset.commentId;
               const parent = btn.closest('.comment');
-              // Remove other reply forms
               document.querySelectorAll('.inline-reply-form').forEach(f => f.remove());
               
               const form = document.createElement('div');

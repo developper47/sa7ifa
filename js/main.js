@@ -7,6 +7,75 @@ import { getCurrentUser, signOut } from './auth.js?v=3.1';
 import { getSections } from './sections.js?v=3.1';
 import { readingTime } from './posts.js?v=3.1';
 
+// ---- Utility: Eastern Arabic numerals ----
+function toArabicNumerals(str) {
+  return String(str).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+
+// ---- Arabic Gregorian month names (Algerian/Maghrebi style) ----
+const GREGORIAN_MONTHS_AR = [
+  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
+function formatArabicDate(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const day = toArabicNumerals(d.getDate());
+  const month = GREGORIAN_MONTHS_AR[d.getMonth()];
+  const year = toArabicNumerals(d.getFullYear());
+  return `${day} ${month} ${year}`;
+}
+
+function formatArabicDateFull(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const dayName = days[d.getDay()];
+  return `${dayName}، ${formatArabicDate(dateStr)}`;
+}
+
+function formatHijriDate() {
+  try {
+    const d = new Date();
+    const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    }).formatToParts(d);
+    let result = '';
+    parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
+    return result.trim() + ' هـ';
+  } catch (e) {
+    return '٢٤ محرم ١٤٤٨ هـ';
+  }
+}
+
+// ---- View Counter ----
+export function incrementViewCount(postId) {
+  const key = `views_${postId}`;
+  const count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  return count;
+}
+export function getViewCount(postId) {
+  return parseInt(localStorage.getItem(`views_${postId}`) || '0');
+}
+
+// ---- Favorites ----
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('sa7ifa_favorites') || '[]'); } catch { return []; }
+}
+export function toggleFavorite(postId) {
+  const favs = getFavorites();
+  const idx = favs.indexOf(postId);
+  if (idx > -1) { favs.splice(idx, 1); } else { favs.push(postId); }
+  localStorage.setItem('sa7ifa_favorites', JSON.stringify(favs));
+  return idx === -1; // returns true if added
+}
+export function isFavorite(postId) {
+  return getFavorites().includes(postId);
+}
+export function getFavoritePosts() {
+  return getFavorites();
+}
+
 /**
  * Render the site header with dynamic section navigation.
  */
@@ -31,13 +100,16 @@ export async function renderHeader() {
     const href = `category.html?section=${s.slug}`;
     const isActive = currentPage === 'category.html' &&
       new URLSearchParams(window.location.search).get('section') === s.slug ? 'active' : '';
-    return `<li><a href="${href}" class="${isActive}" data-section="${s.slug}">${s.icon || ''} ${s.name_ar}</a></li>`;
+    // Use neutral, non-AI icons
+    const neutralIcon = getNeutralIcon(s.slug);
+    return `<li><a href="${href}" class="${isActive}" data-section="${s.slug}">${neutralIcon} ${s.name_ar}</a></li>`;
   }).join('');
 
   const isHome = (currentPage === 'index.html' || currentPage === '');
 
   let userActionsHTML;
   if (user) {
+    const favCount = getFavorites().length;
     userActionsHTML = `
       <div class="user-menu">
         <div class="user-avatar-nav" id="userMenuToggle" title="${user.name}">${user.name.charAt(0)}</div>
@@ -46,9 +118,10 @@ export async function renderHeader() {
             <strong>${user.name}</strong>
             <small>${user.email || ''}</small>
           </div>
-          <a href="dashboard.html" class="dropdown-item">✏️ لوحة التحكم</a>
-          ${user.role === 'admin' ? '<a href="dashboard.html#sections" class="dropdown-item">🛡️ إدارة الأقسام</a>' : ''}
-          <button class="dropdown-item logout-btn" id="logoutBtn">🚪 تسجيل الخروج</button>
+          <a href="dashboard.html" class="dropdown-item">✏ لوحة التحكم</a>
+          <a href="favorites.html" class="dropdown-item">♡ المفضلة ${favCount > 0 ? `<span class="fav-badge">${toArabicNumerals(favCount)}</span>` : ''}</a>
+          ${user.role === 'admin' ? '<a href="dashboard.html#sections" class="dropdown-item">■ إدارة الأقسام</a>' : ''}
+          <button class="dropdown-item logout-btn" id="logoutBtn">← تسجيل الخروج</button>
         </div>
       </div>
     `;
@@ -59,16 +132,11 @@ export async function renderHeader() {
     `;
   }
 
-  const today = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  let hijriDate = "";
-  try {
-    hijriDate = new Intl.DateTimeFormat('ar-EG-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) + " هـ";
-  } catch (e) {
-    hijriDate = "٢٤ محرم ١٤٤٨ هـ";
-  }
+  const today = formatArabicDateFull();
+  const hijriDate = formatHijriDate();
 
   const headerHTML = `
-    <header class="site-header">
+    <header class="site-header" id="siteHeader">
       <!-- Utility bar at top for auth buttons -->
       <div class="utility-top-bar">
         <div class="container utility-inner">
@@ -79,13 +147,13 @@ export async function renderHeader() {
       </div>
 
       <!-- Main majestic broadsheet masthead -->
-      <div class="masthead-main">
+      <div class="masthead-main" id="mastheadMain">
         <div class="container masthead-grid">
           <!-- Right Column Metadata -->
           <div class="masthead-meta-box masthead-meta-box--right">
-            <div class="meta-item">القاهرة</div>
+            <div class="meta-item">مرحبا بك</div>
             <div class="meta-item">جريدة مستقلة للفكر الحر</div>
-            <div class="meta-item">تأسست عام ٢٠٢٦ م</div>
+            <div class="meta-item">تأسست عام ${toArabicNumerals(2026)} م</div>
           </div>
 
           <!-- Center Logo -->
@@ -128,12 +196,12 @@ export async function renderHeader() {
       </div>
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
-        ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${s.icon || ''} ${s.name_ar}</a></li>`).join('')}
+        ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">
         ${user
-          ? `<a href="dashboard.html" class="btn btn-primary" style="width:100%">✏️ لوحة التحكم</a>
+          ? `<a href="dashboard.html" class="btn btn-primary" style="width:100%">✏ لوحة التحكم</a>
              <button class="btn btn-outline logout-btn" style="width:100%;margin-top:0.5rem">تسجيل الخروج</button>`
           : `<a href="login.html" class="btn btn-primary" style="width:100%">تسجيل الدخول</a>`
         }
@@ -142,6 +210,19 @@ export async function renderHeader() {
   `;
 
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
+
+  // ---- Sticky Shrink on Scroll ----
+  const masthead = document.getElementById('mastheadMain');
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) {
+      header.classList.add('header--scrolled');
+      masthead.classList.add('masthead--compact');
+    } else {
+      header.classList.remove('header--scrolled');
+      masthead.classList.remove('masthead--compact');
+    }
+  }, { passive: true });
 
   // Mobile menu
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -188,6 +269,21 @@ export async function renderHeader() {
 }
 
 /**
+ * Get neutral, newspaper-appropriate icon for a section slug
+ */
+function getNeutralIcon(slug) {
+  const icons = {
+    ideas: '◈',
+    economy: '◉',
+    politics: '◎',
+    health: '✚',
+    tech: '◆',
+    default: '▸'
+  };
+  return icons[slug] || icons.default;
+}
+
+/**
  * Render the site footer with dynamic sections.
  */
 export async function renderFooter() {
@@ -205,7 +301,7 @@ export async function renderFooter() {
         <div class="footer-grid">
           <div class="footer-col footer-brand">
             <div class="footer-logo">
-              <img src="LOGO.png" alt="الصحيفة" class="footer-logo-img">
+              <span style="font-family: var(--font-serif); font-size: 2rem; color: var(--paper);">الصحيفة</span>
             </div>
             <p class="footer-tagline">منصة عربية مستقلة تُعنى بالتحليل الفكري والاقتصادي والاجتماعي.</p>
           </div>
@@ -216,9 +312,9 @@ export async function renderFooter() {
             </ul>
           </div>
           <div class="footer-col">
-            <h4>المجلة</h4>
+            <h4>الصحيفة</h4>
             <ul>
-              <li><a href="about.html">عن المجلة</a></li>
+              <li><a href="about.html">عن الصحيفة</a></li>
               <li><a href="dashboard.html">كتابة مقال</a></li>
               <li><a href="login.html">تسجيل الدخول</a></li>
             </ul>
@@ -226,7 +322,7 @@ export async function renderFooter() {
         </div>
         <div class="footer-bottom">
           <div class="footer-bottom-rule"></div>
-          <p>© ${new Date().getFullYear()} الصحيفة — جميع الحقوق محفوظة</p>
+          <p>© ${toArabicNumerals(new Date().getFullYear())} الصحيفة — جميع الحقوق محفوظة</p>
         </div>
       </div>
     </footer>
@@ -237,6 +333,7 @@ export async function renderFooter() {
 
 /**
  * Render a post card in the classic editorial newspaper style.
+ * Section posts use float-image (newspaper inline) style.
  */
 export function renderPostCard(post, variant = 'default') {
   const section = post.sections;
@@ -244,9 +341,10 @@ export function renderPostCard(post, variant = 'default') {
   const sectionSlug = section?.slug || '';
   const sectionColor = section?.color || '#1a1a1a';
   const rtime = readingTime(post.content);
-  const dateStr = formatDateShort(post.published_at || post.created_at);
+  const dateStr = formatArabicDate(post.published_at || post.created_at);
   const initial = post.author_name ? post.author_name.charAt(0) : '؟';
   const img = post.featured_image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+  const views = toArabicNumerals(getViewCount(post.id));
 
   if (variant === 'featured') {
     return `
@@ -269,31 +367,36 @@ export function renderPostCard(post, variant = 'default') {
             <span class="post-card__sep">·</span>
             <time>${dateStr}</time>
             <span class="post-card__sep">·</span>
-            <span>${rtime} د قراءة</span>
+            <span>${toArabicNumerals(rtime)} د قراءة</span>
+            <span class="post-card__sep">·</span>
+            <span class="view-count" title="عدد المشاهدات">◎ ${views}</span>
           </div>
         </div>
       </article>
     `;
   }
 
+  // Newspaper inline-image style for section cards
   return `
-    <article class="post-card">
-      <a href="article.html?id=${post.id}" class="post-card__img-link">
-        <div class="post-card__img-wrap">
+    <article class="post-card post-card--newspaper">
+      <div class="post-card__newspaper-inner">
+        <a href="article.html?id=${post.id}" class="post-card__newspaper-img">
           <img src="${img}" alt="${post.title}" loading="lazy">
-          <span class="post-card__section" style="background:${sectionColor}">${sectionName}</span>
-        </div>
-        <span class="post-card__image-caption">الأرشيف الصحفي • ${sectionName}</span>
-      </a>
-      <div class="post-card__body">
-        <h3 class="post-card__title">
-          <a href="article.html?id=${post.id}">${post.title}</a>
-        </h3>
-        <p class="post-card__excerpt">${post.excerpt}</p>
-        <div class="post-card__meta">
-          <time>${dateStr}</time>
-          <span class="post-card__sep">·</span>
-          <span>${rtime} د</span>
+          <span class="post-card__image-caption">الأرشيف • ${sectionName}</span>
+        </a>
+        <div class="post-card__body">
+          <span class="post-card__section" style="color:${sectionColor}; font-size:0.75rem; font-weight:700; display:block; margin-bottom:0.3rem;">${sectionName}</span>
+          <h3 class="post-card__title">
+            <a href="article.html?id=${post.id}">${post.title}</a>
+          </h3>
+          <p class="post-card__excerpt post-card__excerpt--sm">${post.excerpt}</p>
+          <div class="post-card__meta">
+            <time>${dateStr}</time>
+            <span class="post-card__sep">·</span>
+            <span>${toArabicNumerals(rtime)} د</span>
+            <span class="post-card__sep">·</span>
+            <span class="view-count">◎ ${views}</span>
+          </div>
         </div>
       </div>
     </article>
@@ -307,7 +410,7 @@ export function renderPostRow(post) {
   const section = post.sections;
   const sectionName = section?.name_ar || '';
   const sectionColor = section?.color || '#1a1a1a';
-  const dateStr = formatDateShort(post.published_at || post.created_at);
+  const dateStr = formatArabicDate(post.published_at || post.created_at);
   const img = post.featured_image_url;
 
   return `
@@ -347,7 +450,4 @@ export function showToast(msg, type = 'success') {
   setTimeout(() => { toast.classList.remove('fikr-toast--show'); setTimeout(() => toast.remove(), 400); }, 3500);
 }
 
-function formatDateShort(dateString) {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
-}
+export { formatArabicDate, formatArabicDateFull, toArabicNumerals };

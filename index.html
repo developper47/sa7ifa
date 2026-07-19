@@ -9,8 +9,8 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <link rel="stylesheet" href="css/style.css?v=2.0">
-  <link rel="stylesheet" href="css/pages.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/pages.css?v=3.2">
 </head>
 <body>
   <!-- Header and Footer are injected by main.js -->
@@ -24,7 +24,7 @@
         <span style="margin: 0 1.5rem;">•</span>
         <span>إصدار تجريبي</span>
         <span style="margin: 0 1.5rem;">•</span>
-        <span>محررة في القاهرة</span>
+        <span>جريدة مستقلة للفكر الحر</span>
       </div>
 
       <!-- Breaking Bar / Ticker -->
@@ -37,7 +37,7 @@
       <div class="vintage-broadsheet-grid">
         <!-- Right Column: 22% Breaking news -->
         <aside class="broadsheet-col broadsheet-col--breaking">
-          <h3>آخر الأنباء عاجلة</h3>
+          <h3>آخر المقالات</h3>
           <div id="breakingList">
             <p class="text-center p-4">جارٍ التحميل...</p>
           </div>
@@ -56,7 +56,7 @@
           <div id="editorialList">
             <div class="broadsheet-news-item">
               <h4 style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: bold; margin-bottom: 0.5rem; text-align: center; color: var(--accent);">ميثاق التحرير</h4>
-              <p style="font-size: 0.8rem; line-height: 1.5; color: var(--ink-light); text-align: justify; margin-bottom: 0;">نلتزم في "الصحيفة" بتقديم الكلمة الصادقة والتحليل الموضوعي الرصين، مستقلين عن التوجهات السياسية الآنية، ومنتصرين دائماً لحرية الفكر والكلمة المستنيرة.</p>
+              <p style="font-size: 0.8rem; line-height: 1.5; color: var(--ink-light); text-align: justify; margin-bottom: 0;">نلتزم في "الصحيفة" بتقديم الكلمة الصادقة والتحليل الموضوعي الرصين، مستقلين عن التوجهات السياسية الآنية، ومنتصرين دائماً للكلمة الصادقة والفكر المستنير.</p>
             </div>
             <div style="border-top: 1px dashed var(--ink-faint); margin: 0.75rem 0;"></div>
             <div id="opinionList">
@@ -75,9 +75,9 @@
   </main>
 
   <script type="module">
-    import { renderHeader, renderFooter, renderPostCard, renderPostRow } from './js/main.js?v=3.1';
-    import { getPosts } from './js/posts.js?v=3.1';
-    import { getSections } from './js/sections.js?v=3.1';
+    import { renderHeader, renderFooter, renderPostCard, renderPostRow } from './js/main.js?v=3.2';
+    import { getPosts } from './js/posts.js?v=3.2';
+    import { getSections } from './js/sections.js?v=3.2';
 
     (async () => {
       // 1. Initial renders
@@ -142,7 +142,7 @@
               <h2 class="section-rule__label">${section.icon || ''} ${section.name_ar}</h2>
               <a href="category.html?section=${section.slug}" class="section-rule__link" style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--accent);">تصفح القسم ←</a>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+            <div class="section-posts-newspaper">
               ${sectionPosts.map(p => renderPostCard(p)).join('')}
             </div>
           </section>

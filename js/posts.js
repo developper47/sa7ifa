@@ -201,12 +201,22 @@ export function readingTime(content) {
 }
 
 /**
- * Format date in Arabic locale.
+ * Format date in Arabic locale with Maghrebi month names and Arabic numerals.
  */
+const GREGORIAN_MONTHS_AR = [
+  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+function toArabicNumerals(str) {
+  return String(str).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
 export function formatDate(dateString) {
   if (!dateString) return '';
   const d = new Date(dateString);
-  return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+  const day = toArabicNumerals(d.getDate());
+  const month = GREGORIAN_MONTHS_AR[d.getMonth()];
+  const year = toArabicNumerals(d.getFullYear());
+  return `${day} ${month} ${year}`;
 }
 
 /**
