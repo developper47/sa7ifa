@@ -3,219 +3,385 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="الصحيفة — منصة عربية مستقلة لنشر المقالات التحليلية والفكرية في الاقتصاد والمجتمع والأخبار والأفكار">
+  <meta name="description" content="الصحيفة — جريدة عربية مستقلة للفكر والتحليل">
   <title>الصحيفة — الرئيسية</title>
-  
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <link rel="stylesheet" href="css/style.css?v=3.3">
-  <link rel="stylesheet" href="css/pages.css?v=3.3">
+  <link rel="stylesheet" href="css/style.css?v=3.4">
+  <link rel="stylesheet" href="css/pages.css?v=3.4">
+  <link rel="stylesheet" href="css/newspaper_slider.css?v=1.0">
+  <style>
+    /* ── Body override for slider mode ─────────────────── */
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    .site-header { flex-shrink: 0; }
+    .nws-slider { flex: 1; min-height: 0; }
+  </style>
 </head>
 <body>
-  <!-- Header and Footer are injected by main.js -->
 
-  <main class="main-content">
-    <div class="container">
+  <!-- ═══ FULL-PAGE NEWSPAPER SLIDER ═════════════════════ -->
+  <div class="nws-slider" id="nwsSlider">
 
-      <!-- Breaking Bar / Ticker -->
-      <div class="breaking-bar" id="breakingBar">
-        <div class="breaking-bar__label">عاجل</div>
-        <div class="breaking-bar__track" id="tickerTrack"></div>
+    <!-- Loading screen -->
+    <div class="nws-loading" id="nwsLoading">
+      <div class="nws-loading-inner">
+        <div class="nws-loading-logo">الصحيفة</div>
+        <div class="nws-loading-rule"></div>
+        <p class="nws-loading-text">جارٍ طباعة الصحيفة…</p>
+        <div class="nws-loading-dots"><span></span><span></span><span></span></div>
       </div>
-
-      <!-- Vintage Asymmetrical Broadsheet Grid -->
-      <div class="vintage-broadsheet-grid">
-        <!-- Right Column: 22% Latest Articles -->
-        <aside class="broadsheet-col broadsheet-col--breaking">
-          <h3>آخر المقالات</h3>
-          <div id="breakingList">
-            <p class="text-center p-4">جارٍ التحميل...</p>
-          </div>
-        </aside>
-
-        <!-- Middle Column: 56% Main Story -->
-        <section class="broadsheet-col broadsheet-col--main">
-          <div id="heroContainer">
-            <p class="text-center p-4">جارٍ التحميل...</p>
-          </div>
-        </section>
-
-        <!-- Left Column: 22% Editorial / Opinion -->
-        <aside class="broadsheet-col broadsheet-col--editorial">
-          <h3>رأي التحرير</h3>
-          <div id="editorialList">
-            <div class="broadsheet-news-item">
-              <h4 style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: bold; margin-bottom: 0.5rem; text-align: center; color: var(--accent);">ميثاق التحرير</h4>
-              <p style="font-size: 0.8rem; line-height: 1.5; color: var(--ink-light); text-align: justify; margin-bottom: 0;">نلتزم في "الصحيفة" بتقديم الكلمة الصادقة والتحليل الموضوعي الرصين، مستقلين عن التوجهات السياسية الآنية، ومنتصرين دائماً للكلمة الصادقة والفكر المستنير.</p>
-            </div>
-            <div style="border-top: 1px dashed var(--ink-faint); margin: 0.75rem 0;"></div>
-            <div id="opinionList">
-              <p class="text-center p-4">جارٍ التحميل...</p>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <!-- Dynamic Section Blocks — Newspaper Page Layout -->
-      <div id="sectionsContainer">
-        <!-- Sections injected here -->
-      </div>
-
     </div>
-  </main>
+
+    <!-- Slide Track -->
+    <div class="nws-track" id="nwsTrack"></div>
+
+    <!-- Navigation Arrows -->
+    <button class="nws-arrow nws-arrow--prev" id="nwsPrev" aria-label="السابق">&#8250;</button>
+    <button class="nws-arrow nws-arrow--next" id="nwsNext" aria-label="التالي">&#8249;</button>
+
+    <!-- Section name badge -->
+    <div class="nws-section-badge" id="nwsSectionBadge"></div>
+
+    <!-- Dot navigation -->
+    <nav class="nws-dots" id="nwsDots" aria-label="تصفح الأقسام"></nav>
+
+    <!-- Counter -->
+    <div class="nws-counter" id="nwsCounter"></div>
+  </div>
+
+  <!-- ═══ ARTICLE MODAL — Double-page Book Spread ════════ -->
+  <div class="nws-modal" id="nwsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="nws-modal-backdrop" id="nwsModalBackdrop"></div>
+    <div class="nws-modal-spread" id="nwsModalSpread">
+      <!-- Left page: Visual + meta -->
+      <div class="nws-modal-page nws-modal-page--left" id="nwsModalLeft"></div>
+      <!-- Spine / gutter -->
+      <div class="nws-modal-spine"></div>
+      <!-- Right page: Full content -->
+      <div class="nws-modal-page nws-modal-page--right" id="nwsModalRight"></div>
+      <!-- Close stamp -->
+      <button class="nws-modal-close" id="nwsModalClose" aria-label="إغلاق">
+        <span>✕</span>
+      </button>
+    </div>
+  </div>
 
   <script type="module">
-    import { renderHeader, renderFooter, renderPostCard, toArabicNumerals, getViewCount } from './js/main.js?v=3.3';
-    import { getPosts, readingTime } from './js/posts.js?v=3.3';
-    import { getSections } from './js/sections.js?v=3.3';
+    import { renderHeader } from './js/main.js?v=3.4';
+    import { getPosts } from './js/posts.js?v=3.4';
+    import { getSections } from './js/sections.js?v=3.4';
 
-    // ---- Arabic Gregorian months (Maghrebi) ----
+    /* ── Helpers ───────────────────────────────────────── */
     const MONTHS = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     const toAr = s => String(s).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
-    const fmtDate = d => {
-      if (!d) return '';
-      const dt = new Date(d);
-      return `${toAr(dt.getDate())} ${MONTHS[dt.getMonth()]} ${toAr(dt.getFullYear())}`;
-    };
+    const fmtDate = d => { if (!d) return ''; const dt = new Date(d); return `${toAr(dt.getDate())} ${MONTHS[dt.getMonth()]} ${toAr(dt.getFullYear())}`; };
+    const FALLBACK = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+    let ALL_POSTS = [];
 
-    // ---- Render a section in authentic newspaper multi-column layout ----
-    function renderNewspaperSection(section, posts) {
-      if (!posts || posts.length === 0) return '';
-      const [main, second, third] = posts;
-      const color = section.color || 'var(--ink)';
-
-      function articleImg(p, h = 160) {
-        const src = p.featured_image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
-        return `<a href="article.html?id=${p.id}" class="nps-img-link">
-          <img src="${src}" alt="${p.title}" style="width:100%;height:${h}px;object-fit:cover;filter:grayscale(100%) contrast(138%) brightness(95%);border:1px solid var(--ink);display:block;">
-          <span class="nps-img-caption">الأرشيف الصحفي • ${section.name_ar}</span>
-        </a>`;
-      }
-
-      // Main article (left-spanning big column)
-      const mainHTML = `
-        <div class="nps-col nps-col--main">
-          ${articleImg(main, 200)}
-          <h3 class="nps-title nps-title--main">
-            <a href="article.html?id=${main.id}">${main.title}</a>
-          </h3>
-          <p class="nps-excerpt">${main.excerpt || ''}</p>
-          <div class="nps-meta">
-            <span>${fmtDate(main.published_at || main.created_at)}</span>
-            <span class="nps-sep">·</span>
-            <span>${toAr(readingTime(main.content))} د قراءة</span>
-            <span class="nps-sep">·</span>
-            <span>◎ ${toAr(getViewCount(main.id))}</span>
-          </div>
+    /* ── Article card renderer ──────────────────────────── */
+    function artImg(p, h = 140) {
+      const src = p.featured_image_url || FALLBACK;
+      return `<div class="na-img-wrap">
+        <img src="${src}" alt="${p.title}" style="height:${h}px" loading="lazy" class="na-img">
+        <span class="na-img-cap">${p.sections?.name_ar || ''} · ${fmtDate(p.published_at || p.created_at)}</span>
+      </div>`;
+    }
+    function artText(p, len = 170) {
+      const excerpt = (p.excerpt || '').substring(0, len);
+      return `<div class="na-text">
+        <h3 class="na-title">
+          <button class="na-title-btn na-open-modal" data-post-id="${p.id}">${p.title}</button>
+        </h3>
+        <p class="na-excerpt">${excerpt}…</p>
+        <div class="na-foot">
+          <button class="na-more na-open-modal" data-post-id="${p.id}">إقرأ المزيد →</button>
+          <span class="na-author">${p.author_name || 'المحرر'}</span>
         </div>
-      `;
-
-      // Secondary articles
-      const secondHTML = second ? `
-        <div class="nps-col nps-col--secondary">
-          ${articleImg(second, 130)}
-          <h4 class="nps-title nps-title--secondary">
-            <a href="article.html?id=${second.id}">${second.title}</a>
-          </h4>
-          <p class="nps-excerpt nps-excerpt--sm">${(second.excerpt || '').substring(0, 120)}…</p>
-          <div class="nps-meta">${fmtDate(second.published_at || second.created_at)}</div>
-        </div>
-      ` : '';
-
-      const thirdHTML = third ? `
-        <div class="nps-col nps-col--tertiary">
-          <h4 class="nps-title nps-title--secondary">
-            <a href="article.html?id=${third.id}">${third.title}</a>
-          </h4>
-          <p class="nps-excerpt nps-excerpt--sm">${(third.excerpt || '').substring(0, 100)}…</p>
-          <div class="nps-meta">${fmtDate(third.published_at || third.created_at)}</div>
-          <div style="margin-top: 0.8rem; border-top: 1px dashed var(--ink-faint); padding-top: 0.8rem;">
-            <a href="category.html?section=${section.slug}" class="nps-more-link">تصفح القسم →</a>
-          </div>
-        </div>
-      ` : `
-        <div class="nps-col nps-col--tertiary">
-          <a href="category.html?section=${section.slug}" class="nps-more-link">تصفح القسم →</a>
-        </div>
-      `;
-
-      return `
-        <section class="newspaper-section">
-          <!-- Section Header — Ink bar with section name -->
-          <div class="nps-header" style="border-color: ${color}; background: ${color};">
-            <span class="nps-header__ornament">❧</span>
-            <h2 class="nps-header__title">${section.name_ar}</h2>
-            <span class="nps-header__ornament">❧</span>
-          </div>
-          <!-- 3-column newspaper grid -->
-          <div class="nps-grid">
-            ${mainHTML}
-            ${secondHTML}
-            ${thirdHTML}
-          </div>
-        </section>
-      `;
+      </div>`;
     }
 
+    /* pos: 'right' | 'left' | 'top' */
+    function renderArticle(p, pos = 'right', imgH = 140, textLen = 170) {
+      if (pos === 'top') {
+        return `<article class="na na--top">
+          ${artImg(p, imgH)}
+          ${artText(p, textLen)}
+        </article>`;
+      }
+      if (pos === 'right') {
+        return `<article class="na na--row">
+          ${artImg(p, imgH)}
+          ${artText(p, textLen)}
+        </article>`;
+      }
+      // left
+      return `<article class="na na--row-rev">
+        ${artText(p, textLen)}
+        ${artImg(p, imgH)}
+      </article>`;
+    }
+
+    /* ═══ TEMPLATE 1: Asymmetric Hero Grid ═════════════════
+       Top: hero article (centered/top image, full width)
+       Bottom: 3 columns — img-right · img-top · img-left      */
+    function tpl1(posts, section) {
+      const [p0, p1, p2, p3] = posts;
+      return `<div class="nws-slide" data-section-id="${section.id}">
+        <div class="nws-page tpl-1">
+          <div class="tpl1-top">
+            <div class="tpl1-top-inner">
+              ${p0 ? renderArticle(p0, 'top', 200, 250) : ''}
+            </div>
+          </div>
+          <div class="tpl1-bottom">
+            <div class="tpl1-col tpl1-col--a">${p1 ? renderArticle(p1, 'right', 120, 120) : ''}</div>
+            <div class="tpl1-col tpl1-col--b">${p2 ? renderArticle(p2, 'top', 110, 100) : ''}</div>
+            <div class="tpl1-col tpl1-col--c">${p3 ? renderArticle(p3, 'left', 120, 120) : ''}</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    /* ═══ TEMPLATE 2: Balanced 2×2 Grid ════════════════════
+       Top-right: img-right · Top-left: img-left
+       Bot-right: img-top  · Bot-left: text-dominant          */
+    function tpl2(posts, section) {
+      const [p0, p1, p2, p3] = posts;
+      return `<div class="nws-slide" data-section-id="${section.id}">
+        <div class="nws-page tpl-2">
+          <div class="tpl2-quad tpl2-quad--tr">${p0 ? renderArticle(p0, 'right', 140, 140) : ''}</div>
+          <div class="tpl2-quad tpl2-quad--tl">${p1 ? renderArticle(p1, 'left', 140, 140) : ''}</div>
+          <div class="tpl2-quad tpl2-quad--br">${p2 ? renderArticle(p2, 'top', 130, 120) : ''}</div>
+          <div class="tpl2-quad tpl2-quad--bl">${p3 ? `<article class="na na--text-only">
+            <div class="na-text-label">${section.name_ar}</div>
+            ${artText(p3, 250)}
+          </article>` : ''}</div>
+        </div>
+      </div>`;
+    }
+
+    /* ═══ TEMPLATE 3: Editorial Magazine Column ═════════════
+       Wide main (60%): big essay, centered image
+       Narrow sidebar (40%): 3 stacked articles               */
+    function tpl3(posts, section) {
+      const [p0, p1, p2, p3] = posts;
+      return `<div class="nws-slide" data-section-id="${section.id}">
+        <div class="nws-page tpl-3">
+          <div class="tpl3-main">${p0 ? renderArticle(p0, 'top', 230, 320) : ''}</div>
+          <div class="tpl3-sidebar">
+            <div class="tpl3-item">${p1 ? renderArticle(p1, 'right', 110, 100) : ''}</div>
+            <div class="tpl3-divider"></div>
+            <div class="tpl3-item">${p2 ? renderArticle(p2, 'left', 110, 100) : ''}</div>
+            <div class="tpl3-divider"></div>
+            <div class="tpl3-item tpl3-item--last">${p3 ? `<article class="na na--text-only na--sm">
+              ${artText(p3, 130)}
+            </article>` : ''}</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const TEMPLATES = [tpl1, tpl2, tpl3];
+
+    /* ── Section header band ───────────────────────────── */
+    function sectionBand(section, slideIdx, total) {
+      const color = section.color || '#2B2B2B';
+      return `<div class="nws-band" style="border-color:${color}">
+        <div class="nws-band-inner">
+          <span class="nws-band-ornament">❦</span>
+          <span class="nws-band-name" style="color:${color}">${section.name_ar}</span>
+          <span class="nws-band-rule"></span>
+          <a href="category.html?section=${section.slug}" class="nws-band-link" style="color:${color}">تصفح الأرشيف ←</a>
+          <span class="nws-band-ornament">❦</span>
+        </div>
+      </div>`;
+    }
+
+    /* ── Slider state ──────────────────────────────────── */
+    let current = 0;
+    let total = 0;
+    let slides = [];
+    let isAnimating = false;
+    let touchStartX = 0;
+
+    function goTo(idx) {
+      if (isAnimating) return;
+      if (idx < 0 || idx >= total) return;
+      isAnimating = true;
+      current = idx;
+      const track = document.getElementById('nwsTrack');
+      // RTL: slides go from RIGHT to LEFT, so positive index moves LEFT (negative %) in LTR
+      // We use negative translateX in RTL-aware way: slide N is at offset N * 100% from right
+      track.style.transform = `translateX(${idx * -100}%)`;
+      updateUI();
+      setTimeout(() => { isAnimating = false; }, 650);
+    }
+
+    function updateUI() {
+      const badge = document.getElementById('nwsSectionBadge');
+      const counter = document.getElementById('nwsCounter');
+      if (slides[current]) {
+        badge.textContent = slides[current].section.name_ar;
+        badge.style.color = slides[current].section.color || 'var(--accent)';
+        badge.style.borderColor = slides[current].section.color || 'var(--accent)';
+      }
+      counter.textContent = `${toAr(current + 1)} / ${toAr(total)}`;
+
+      // Dots
+      document.querySelectorAll('.nws-dot').forEach((dot, i) => {
+        dot.classList.toggle('nws-dot--active', i === current);
+      });
+
+      // Arrows visibility
+      document.getElementById('nwsPrev').style.opacity = current === 0 ? '0.3' : '1';
+      document.getElementById('nwsNext').style.opacity = current === total - 1 ? '0.3' : '1';
+    }
+
+    /* ── Modal ──────────────────────────────────────────── */
+    function openModal(postId) {
+      const post = ALL_POSTS.find(p => p.id === postId);
+      if (!post) return;
+      const modal = document.getElementById('nwsModal');
+      const left = document.getElementById('nwsModalLeft');
+      const right = document.getElementById('nwsModalRight');
+      const img = post.featured_image_url || FALLBACK;
+      const section = post.sections?.name_ar || '';
+      const date = fmtDate(post.published_at || post.created_at);
+
+      left.innerHTML = `
+        <div class="nws-ml-top">
+          <div class="nws-ml-section">${section}</div>
+          <div class="nws-ml-rule"></div>
+        </div>
+        <div class="nws-ml-img-wrap">
+          <img src="${img}" alt="${post.title}" class="nws-ml-img">
+        </div>
+        <div class="nws-ml-meta">
+          <div class="nws-ml-date">📅 ${date}</div>
+          <div class="nws-ml-author">✒ ${post.author_name || 'المحرر'}</div>
+        </div>
+        <div class="nws-ml-ornament">— الصحيفة —</div>
+        <a href="article.html?id=${post.id}" class="nws-ml-link">فتح المقال الكامل →</a>
+      `;
+
+      const bodyHtml = post.content || `<p>${post.excerpt || ''}</p>`;
+      right.innerHTML = `
+        <div class="nws-mr-section-header">${section}</div>
+        <h2 class="nws-mr-title">${post.title}</h2>
+        <div class="nws-mr-rule"></div>
+        <div class="nws-mr-body">${bodyHtml}</div>
+      `;
+
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('open');
+      document.body.style.overflow = '';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('nwsModal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    /* ── Main init ──────────────────────────────────────── */
     (async () => {
       await renderHeader();
 
       const [allPosts, sections] = await Promise.all([
-        getPosts({ status: 'published', limit: 20 }),
+        getPosts({ status: 'published', limit: 80 }),
         getSections()
       ]);
+      ALL_POSTS = allPosts;
 
-      // 1. Hero (featured)
-      const heroContainer = document.getElementById('heroContainer');
-      const featured = allPosts.find(p => p.is_featured) || allPosts[0];
-      if (featured) {
-        heroContainer.innerHTML = renderPostCard(featured, 'featured');
-      } else {
-        heroContainer.innerHTML = '<p class="text-center p-4">لا توجد مقالات منشورة بعد.</p>';
-      }
+      const track = document.getElementById('nwsTrack');
+      const dotsEl = document.getElementById('nwsDots');
+      let slideIndex = 0;
 
-      // 2. Latest articles column (right)
-      const breakingList = document.getElementById('breakingList');
-      const breakingPosts = allPosts.filter(p => p.id !== featured?.id).slice(0, 4);
-      breakingList.innerHTML = breakingPosts.map(p => `
-        <div class="broadsheet-news-item">
-          <h4><a href="article.html?id=${p.id}">${p.title}</a></h4>
-          <time>${fmtDate(p.published_at || p.created_at)}</time>
-        </div>
-      `).join('');
-
-      // 3. Editorial opinion column (left)
-      const opinionList = document.getElementById('opinionList');
-      const opinionPosts = allPosts.filter(p => p.id !== featured?.id && !breakingPosts.some(bp => bp.id === p.id)).slice(0, 3);
-      if (opinionPosts.length > 0) {
-        opinionList.innerHTML = opinionPosts.map(p => `
-          <div class="broadsheet-news-item">
-            <span style="font-size: 0.75rem; color: var(--accent); font-weight: bold;">[${p.sections?.name_ar || 'عام'}]</span>
-            <h4 style="margin-top: 0.25rem; font-weight: 500;"><a href="article.html?id=${p.id}">${p.title}</a></h4>
-          </div>
-        `).join('');
-      } else {
-        opinionList.innerHTML = '<p class="text-center p-4" style="font-size:0.8rem;color:var(--ink-light)">تابعونا في الأعداد القادمة...</p>';
-      }
-
-      // 4. Section blocks — newspaper page layout
-      const sectionsContainer = document.getElementById('sectionsContainer');
-      let sectionsHTML = '';
       for (const section of sections) {
-        const sectionPosts = allPosts.filter(p => p.section_id === section.id).slice(0, 3);
-        if (sectionPosts.length === 0) continue;
-        sectionsHTML += renderNewspaperSection(section, sectionPosts);
+        const posts = allPosts.filter(p => p.section_id === section.id).slice(0, 4);
+        if (posts.length === 0) continue;
+
+        const tplFn = TEMPLATES[slideIndex % 3];
+        const band = sectionBand(section, slideIndex, sections.length);
+        const slideContent = tplFn(posts, section);
+
+        // Inject band inside slide div
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = slideContent;
+        const slideEl = wrapper.firstElementChild;
+        slideEl.insertAdjacentHTML('afterbegin', band);
+        track.appendChild(slideEl);
+
+        // Dot
+        const dot = document.createElement('button');
+        dot.className = 'nws-dot';
+        dot.setAttribute('aria-label', section.name_ar);
+        dot.title = section.name_ar;
+        dot.style.setProperty('--dot-color', section.color || 'var(--ink)');
+        dot.addEventListener('click', () => goTo(slideIndex));
+        dotsEl.appendChild(dot);
+
+        slides.push({ section, posts });
+        slideIndex++;
       }
-      sectionsContainer.innerHTML = sectionsHTML || '<p class="text-center p-4">لا توجد أقسام بعد.</p>';
 
-      // 5. News Ticker
-      const tickerTrack = document.getElementById('tickerTrack');
-      tickerTrack.innerHTML = allPosts.slice(0, 8).map(p => `
-        <span style="margin: 0 2rem;">◆ ${p.title}</span>
-      `).join('');
+      total = slides.length;
 
-      renderFooter();
+      if (total === 0) {
+        track.innerHTML = '<div class="nws-slide" style="display:flex;align-items:center;justify-content:center;"><p style="font-size:1.5rem;font-family:var(--font-serif)">لا توجد أقسام منشورة بعد.</p></div>';
+      }
+
+      // Arrow events
+      document.getElementById('nwsPrev').addEventListener('click', () => goTo(current - 1));
+      document.getElementById('nwsNext').addEventListener('click', () => goTo(current + 1));
+
+      // Keyboard navigation
+      document.addEventListener('keydown', e => {
+        if (document.getElementById('nwsModal').classList.contains('open')) {
+          if (e.key === 'Escape') closeModal();
+          return;
+        }
+        if (e.key === 'ArrowLeft') goTo(current + 1);
+        if (e.key === 'ArrowRight') goTo(current - 1);
+      });
+
+      // Touch / swipe
+      track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) goTo(dx > 0 ? current - 1 : current + 1);
+      }, { passive: true });
+
+      // Modal open
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.na-open-modal');
+        if (btn) {
+          e.preventDefault();
+          openModal(btn.dataset.postId);
+        }
+      });
+
+      // Modal close
+      document.getElementById('nwsModalClose').addEventListener('click', closeModal);
+      document.getElementById('nwsModalBackdrop').addEventListener('click', closeModal);
+
+      // Hide loading
+      const loading = document.getElementById('nwsLoading');
+      loading.style.opacity = '0';
+      setTimeout(() => { loading.style.display = 'none'; }, 500);
+
+      // Init UI
+      updateUI();
+
+      // Clear cached posts so fresh seed applies
+      const v = '3.4';
+      if (localStorage.getItem('sa7ifa_slider_v') !== v) {
+        localStorage.removeItem('sa7ifa_db_posts');
+        localStorage.removeItem('sa7ifa_db_articles');
+        localStorage.setItem('sa7ifa_slider_v', v);
+        location.reload();
+        return;
+      }
     })();
   </script>
 </body>
