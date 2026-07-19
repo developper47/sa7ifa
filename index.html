@@ -120,67 +120,179 @@
       </article>`;
     }
 
-    /* ═══ TEMPLATE 1: Asymmetric Hero Grid ═════════════════
-       Top: hero article (centered/top image, full width)
-       Bottom: 3 columns — img-right · img-top · img-left      */
-    function tpl1(posts, section) {
-      const [p0, p1, p2, p3] = posts;
+    /* ═══ REAL VINTAGE NEWSPAPER LAYOUT ════════════════════
+       Top: huge main headline, large featured image, 2 cols text
+       Middle: 2 columns — right (green header + 2 cols text) · left (red title + small image/text)
+       Bottom: 2 columns — left (blue header + text) · right (small image/text)
+    */
+    function tplNewspaper(posts, section) {
+      const [p0, p1, p2, p3, p4] = posts;
+      const todayDate = fmtDate(new Date());
+
+      // Helper to strip HTML tags for preview/excerpts
+      const stripHtml = html => (html || '').replace(/<[^>]+>/g, '').trim();
+
+      const time0 = p0 ? Math.max(1, Math.ceil(stripHtml(p0.content).split(/\s+/).length / 200)) : 1;
+
       return `<div class="nws-slide" data-section-id="${section.id}">
-        <div class="nws-page tpl-1">
-          <div class="tpl1-top">
-            <div class="tpl1-top-inner">
-              ${p0 ? renderArticle(p0, 'top', 200, 250) : ''}
+        <div class="nws-page tpl-real-newspaper" style="--accent: ${section.color || '#8b1a1a'}">
+          
+          <!-- ── Newspaper Masthead ── -->
+          <div class="news-masthead">
+            <div class="news-masthead-top">
+              <div class="masthead-side-col masthead-side-left">
+                <div class="side-box-inner">
+                  <div class="side-box-title">استراتيجية وطنية</div>
+                  <p class="side-box-text">تأسيس رؤية موحدة لمستقبل الفكر والتحليل في العالم العربي</p>
+                </div>
+              </div>
+              <div class="masthead-center">
+                <h1 class="masthead-title">الصحيفة</h1>
+                <p class="masthead-subtitle">جريدة يومية سياسية مستقلة</p>
+              </div>
+              <div class="masthead-side-col masthead-side-right">
+                <div class="side-box-inner">
+                  <div class="side-box-title">ملف الأسبوع</div>
+                  <p class="side-box-text">تحديات الانتقال التكنولوجي ودور الصحافة الرقمية</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="masthead-info-bar">
+              <span>السبت ٢٧ جويلية ٢٠٢٦ م</span>
+              <span class="info-item-sep">◈</span>
+              <span class="info-center">ملحق ${section.name_ar}</span>
+              <span class="info-item-sep">◈</span>
+              <span>السنة الأولى - العدد ٢٤</span>
             </div>
           </div>
-          <div class="tpl1-bottom">
-            <div class="tpl1-col tpl1-col--a">${p1 ? renderArticle(p1, 'right', 120, 120) : ''}</div>
-            <div class="tpl1-col tpl1-col--b">${p2 ? renderArticle(p2, 'top', 110, 100) : ''}</div>
-            <div class="tpl1-col tpl1-col--c">${p3 ? renderArticle(p3, 'left', 120, 120) : ''}</div>
+
+          <!-- ── Main Article (Article 1) ── -->
+          ${p0 ? `
+            <article class="news-main-article">
+              <h2 class="main-headline">
+                <button class="na-title-btn na-open-modal" data-post-id="${p0.id}">${p0.title}</button>
+              </h2>
+              <div class="main-byline">
+                <span>بقلم: ${p0.author_name || 'المحرر'}</span>
+                <span>◈</span>
+                <span>زمن القراءة: ${toAr(time0)} دقيقة</span>
+              </div>
+              
+              <div class="main-content-layout">
+                <div class="main-img-wrap">
+                  <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="main-img">
+                  <span class="main-img-cap">${p0.title}</span>
+                </div>
+                
+                <div class="main-text-cols">
+                  <p class="main-excerpt">${p0.excerpt || stripHtml(p0.content).substring(0, 180)}…</p>
+                  <div class="main-body-text">${p0.content || ''}</div>
+                  <div style="margin-top: 1rem; text-align: left;">
+                    <button class="na-more na-open-modal" data-post-id="${p0.id}">إقرأ المزيد ←</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ` : ''}
+
+          <!-- Divider line -->
+          <div class="news-row-divider"></div>
+
+          <!-- ── Middle Row (Articles 2 & 3) ── -->
+          <div class="news-mid-row">
+            <!-- Middle Right Column (Article 2) -->
+            <div class="news-mid-col news-mid-right">
+              ${p1 ? `
+                <div class="col-section-header green-header">${section.name_ar} اليوم</div>
+                <h3 class="col-title">
+                  <button class="na-title-btn na-open-modal" data-post-id="${p1.id}">${p1.title}</button>
+                </h3>
+                <div class="col-byline">بقلم: ${p1.author_name || 'المحرر'}</div>
+                <div class="col-text-cols">
+                  <p class="col-excerpt">${p1.excerpt || stripHtml(p1.content).substring(0, 120)}…</p>
+                  <div class="col-body-text">${p1.content || ''}</div>
+                </div>
+                <div style="margin-top: 0.5rem; text-align: left;">
+                  <button class="na-more na-open-modal" data-post-id="${p1.id}">إقرأ المزيد ←</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Middle Left Column (Article 3) -->
+            <div class="news-mid-col news-mid-left">
+              ${p2 ? `
+                <h3 class="col-title red-title">
+                  <button class="na-title-btn na-open-modal" data-post-id="${p2.id}">${p2.title}</button>
+                </h3>
+                <div class="col-byline">بقلم: ${p2.author_name || 'المحرر'}</div>
+                <div class="col-content-wrap">
+                  <div class="col-img-wrap-small">
+                    <img src="${p2.featured_image_url || FALLBACK}" alt="${p2.title}">
+                  </div>
+                  <div class="col-text-wrap-small">
+                    <p class="col-excerpt">${p2.excerpt || stripHtml(p2.content).substring(0, 120)}…</p>
+                    <div class="col-body-text">${p2.content || ''}</div>
+                    <div style="margin-top: 0.5rem; text-align: left;">
+                      <button class="na-more na-open-modal" data-post-id="${p2.id}">إقرأ المزيد ←</button>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
           </div>
-        </div>
-      </div>`;
-    }
 
-    /* ═══ TEMPLATE 2: Balanced 2×2 Grid ════════════════════
-       Top-right: img-right · Top-left: img-left
-       Bot-right: img-top  · Bot-left: text-dominant          */
-    function tpl2(posts, section) {
-      const [p0, p1, p2, p3] = posts;
-      return `<div class="nws-slide" data-section-id="${section.id}">
-        <div class="nws-page tpl-2">
-          <div class="tpl2-quad tpl2-quad--tr">${p0 ? renderArticle(p0, 'right', 140, 140) : ''}</div>
-          <div class="tpl2-quad tpl2-quad--tl">${p1 ? renderArticle(p1, 'left', 140, 140) : ''}</div>
-          <div class="tpl2-quad tpl2-quad--br">${p2 ? renderArticle(p2, 'top', 130, 120) : ''}</div>
-          <div class="tpl2-quad tpl2-quad--bl">${p3 ? `<article class="na na--text-only">
-            <div class="na-text-label">${section.name_ar}</div>
-            ${artText(p3, 250)}
-          </article>` : ''}</div>
-        </div>
-      </div>`;
-    }
+          <!-- Divider line -->
+          <div class="news-row-divider"></div>
 
-    /* ═══ TEMPLATE 3: Editorial Magazine Column ═════════════
-       Wide main (60%): big essay, centered image
-       Narrow sidebar (40%): 3 stacked articles               */
-    function tpl3(posts, section) {
-      const [p0, p1, p2, p3] = posts;
-      return `<div class="nws-slide" data-section-id="${section.id}">
-        <div class="nws-page tpl-3">
-          <div class="tpl3-main">${p0 ? renderArticle(p0, 'top', 230, 320) : ''}</div>
-          <div class="tpl3-sidebar">
-            <div class="tpl3-item">${p1 ? renderArticle(p1, 'right', 110, 100) : ''}</div>
-            <div class="tpl3-divider"></div>
-            <div class="tpl3-item">${p2 ? renderArticle(p2, 'left', 110, 100) : ''}</div>
-            <div class="tpl3-divider"></div>
-            <div class="tpl3-item tpl3-item--last">${p3 ? `<article class="na na--text-only na--sm">
-              ${artText(p3, 130)}
-            </article>` : ''}</div>
+          <!-- ── Bottom Row (Articles 4 & 5) ── -->
+          <div class="news-bot-row">
+            <!-- Bottom Left (Article 4) -->
+            <div class="news-bot-col news-bot-left">
+              ${p3 ? `
+                <div class="col-section-header blue-header">شؤون وتطلعات</div>
+                <h3 class="col-title">
+                  <button class="na-title-btn na-open-modal" data-post-id="${p3.id}">${p3.title}</button>
+                </h3>
+                <div class="col-byline">بقلم: ${p3.author_name || 'المحرر'}</div>
+                <div class="col-text-cols">
+                  <p class="col-excerpt">${p3.excerpt || stripHtml(p3.content).substring(0, 120)}…</p>
+                  <div class="col-body-text">${p3.content || ''}</div>
+                </div>
+                <div style="margin-top: 0.5rem; text-align: left;">
+                  <button class="na-more na-open-modal" data-post-id="${p3.id}">إقرأ المزيد ←</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Bottom Right (Article 5) -->
+            <div class="news-bot-col news-bot-right">
+              ${p4 ? `
+                <h3 class="col-title">
+                  <button class="na-title-btn na-open-modal" data-post-id="${p4.id}">${p4.title}</button>
+                </h3>
+                <div class="col-byline">بقلم: ${p4.author_name || 'المحرر'}</div>
+                <div class="col-content-wrap">
+                  <div class="col-img-wrap-small">
+                    <img src="${p4.featured_image_url || FALLBACK}" alt="${p4.title}">
+                  </div>
+                  <div class="col-text-wrap-small">
+                    <p class="col-excerpt">${p4.excerpt || stripHtml(p4.content).substring(0, 120)}…</p>
+                    <div class="col-body-text">${p4.content || ''}</div>
+                    <div style="margin-top: 0.5rem; text-align: left;">
+                      <button class="na-more na-open-modal" data-post-id="${p4.id}">إقرأ المزيد ←</button>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
           </div>
+
         </div>
       </div>`;
     }
 
-    const TEMPLATES = [tpl1, tpl2, tpl3];
+    const TEMPLATES = [tplNewspaper];
 
     /* ── Section header band ───────────────────────────── */
     function sectionBand(section, slideIdx, total) {
@@ -298,10 +410,10 @@
       let slideIndex = 0;
 
       for (const section of sections) {
-        const posts = allPosts.filter(p => p.section_id === section.id).slice(0, 4);
+        const posts = allPosts.filter(p => p.section_id === section.id).slice(0, 5);
         if (posts.length === 0) continue;
 
-        const tplFn = TEMPLATES[slideIndex % 3];
+        const tplFn = TEMPLATES[0];
         const band = sectionBand(section, slideIndex, sections.length);
         const slideContent = tplFn(posts, section);
 
