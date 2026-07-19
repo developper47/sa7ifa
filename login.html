@@ -9,8 +9,8 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <link rel="stylesheet" href="css/style.css?v=2.0">
-  <link rel="stylesheet" href="css/pages.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/pages.css?v=3.2">
 </head>
 <body class="auth-page-bg">
 
@@ -57,7 +57,11 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="signupPassword">كلمة المرور</label>
-        <input type="password" class="form-control" id="signupPassword" placeholder="********" required>
+        <input type="password" class="form-control" id="signupPassword" placeholder="********" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signupConfirmPassword">تأكيد كلمة المرور</label>
+        <input type="password" class="form-control" id="signupConfirmPassword" placeholder="********" required minlength="6">
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%" id="signupBtn">إنشاء حساب جديد</button>
     </form>
@@ -65,13 +69,13 @@
     <!-- Forgot Password Form -->
     <form class="auth-form" id="forgotForm">
       <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.25rem; text-align: center; line-height: 1.5;">
-        أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.
+        أدخل بريدك الإلكتروني وستظهر تعليمات لإعادة تعيين كلمة المرور.
       </p>
       <div class="form-group">
         <label class="form-label" for="forgotEmail">البريد الإلكتروني</label>
         <input type="email" class="form-control" id="forgotEmail" placeholder="name@example.com" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%" id="forgotBtn">إرسال رابط الاستعادة</button>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="forgotBtn">استعادة كلمة المرور</button>
       <div style="text-align: center; margin-top: 1.25rem;">
         <a href="#" id="backToLoginLink" style="font-size: 0.85rem; color: var(--ink-light); font-weight: 600;">العودة لتسجيل الدخول</a>
       </div>
@@ -220,10 +224,19 @@
         signupBtn.disabled = true;
         signupBtn.textContent = 'جارٍ الإنشاء...';
 
+        const password = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        if (password !== confirmPassword) {
+          showMsg('كلمتا المرور غير متطابقتين!', 'error');
+          signupBtn.disabled = false;
+          signupBtn.textContent = 'إنشاء حساب جديد';
+          return;
+        }
+
         const res = await signUp(
           document.getElementById('signupName').value,
           document.getElementById('signupEmail').value,
-          document.getElementById('signupPassword').value
+          password
         );
 
         if (res.success) {
@@ -243,15 +256,25 @@
         forgotBtn.disabled = true;
         forgotBtn.textContent = 'جاري الإرسال...';
 
-        const email = document.getElementById('forgotEmail').value;
-        const res = await sendPasswordResetEmail(email);
-
-        if (res.success) {
-          showMsg('تم إرسال رابط استعادة الحساب بنجاح إلى بريدك الإلكتروني!', 'success');
-          forgotForm.reset();
-        } else {
-          showMsg(res.message, 'error');
+        // Show local message instead of sending email
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!email) {
+          showMsg('يرجى إدخال بريدك الإلكتروني', 'error');
+          forgotBtn.disabled = false;
+          forgotBtn.textContent = 'استعادة كلمة المرور';
+          return;
         }
+        // Store pending reset email locally and show success
+        localStorage.setItem('sa7ifa_pending_reset', email);
+        showMsg('تم تسجيل طلبك. يمكنك تعيين كلمة المرور أدناه.', 'success');
+        forgotForm.reset();
+        // Show password fields inline
+        setTimeout(() => {
+          forgotForm.classList.remove('active');
+          authTabs.style.display = 'none';
+          resetPasswordForm.classList.add('active');
+          document.querySelector('.auth-logo p').textContent = 'تعيين كلمة مرور جديدة';
+        }, 1200);
         forgotBtn.disabled = false;
         forgotBtn.textContent = 'إرسال رابط الاستعادة';
       };
