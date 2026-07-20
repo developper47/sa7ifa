@@ -375,9 +375,13 @@
               featured_image_url: document.getElementById('postImage').value,
               content: document.getElementById('postContent').value,
               excerpt: document.getElementById('postContent').value.substring(0, 180).replace(/<[^>]+>/g, ''),
-              author_id: user.id, author_name: user.name,
-              status: 'pending' // Re-enabled moderation: requires admin approval
+              author_id: user.id,
+              author_name: user.name,
+              status: user.role === 'admin' ? 'published' : 'pending'
             };
+            if (payload.status === 'published') {
+              payload.published_at = new Date().toISOString();
+            }
             if (isEdit) payload.id = post.id;
             
             await savePost(payload);
