@@ -253,9 +253,26 @@ class SupabaseQueryBuilder {
   }
 
   async execute() {
+    const SEED_VERSION = 'v3'; // bump this when POSTS_SEED or SECTIONS_SEED change
+    const storedVersion = localStorage.getItem('sa7ifa_seed_version');
+
+    // Re-seed if version mismatch (preserving user-created posts)
+    if (storedVersion !== SEED_VERSION) {
+      // Save any user-created posts (those not in the seed set)
+      const seedIds = new Set(POSTS_SEED.map(p => p.id));
+      const existingPosts = JSON.parse(localStorage.getItem('sa7ifa_db_posts')) || [];
+      const userPosts = existingPosts.filter(p => !seedIds.has(p.id));
+
+      // Reset default tables
+      localStorage.setItem('sa7ifa_db_sections', JSON.stringify(SECTIONS_SEED));
+      localStorage.setItem('sa7ifa_db_posts', JSON.stringify([...POSTS_SEED, ...userPosts]));
+      localStorage.setItem('sa7ifa_db_site_settings', JSON.stringify(SETTINGS_SEED));
+      localStorage.setItem('sa7ifa_seed_version', SEED_VERSION);
+    }
+
     let data = JSON.parse(localStorage.getItem(`sa7ifa_db_${this.table}`));
-    
-    // Seed initial data if table is null or empty
+
+    // Seed initial data if table is still null or empty (e.g. other tables)
     if (!data || data.length === 0) {
       if (this.table === 'sections') {
         data = SECTIONS_SEED;
