@@ -323,7 +323,7 @@
       const track = document.getElementById('nwsTrack');
       // RTL: slides go from RIGHT to LEFT, so positive index moves LEFT (negative %) in LTR
       // We use negative translateX in RTL-aware way: slide N is at offset N * 100% from right
-      track.style.transform = `translateX(${idx * -100}%)`;
+      track.style.transform = `translateX(${idx * 100}%)`;
       updateUI();
       setTimeout(() => { isAnimating = false; }, 650);
     }
