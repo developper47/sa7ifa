@@ -29,30 +29,49 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  align-items: center;       /* Center newspaper page horizontally */
+  justify-content: flex-start; /* Start from top to support scrolling correctly */
+  overflow-y: auto;
+  overflow-x: hidden;
   flex-shrink: 0;
+  background: #E5E2DA;        /* Table backdrop color */
+  padding: 1.5rem 0.5rem;     /* Reduced margin around the paper page */
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(43,43,43,0.25) transparent;
 }
 
 /* ── Newspaper page — the white/cream inner area ─────────── */
 .nws-page {
-  flex: 1;
-  min-height: 0;
+  flex: none;
+  height: auto;
+  width: 100%;
+  max-width: 1000px;         /* Rectangular proportions resembling a broadsheet */
   background: #F4F1EA;
   background-image:
     repeating-linear-gradient(
       transparent 0px, transparent 26px,
       rgba(43,43,43,0.03) 26px, rgba(43,43,43,0.03) 27px
     );
-  border: 3px double #2B2B2B;
-  margin: 0 2px 2px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  border: 3px double #2B2B2B;  /* Thinner border (from 6px to 3px) */
+  margin: 0;
+  overflow: visible;         /* Scroll outside */
   position: relative;
-  /* Page shadow */
-  box-shadow: inset 0 0 0 4px #F4F1EA, inset 0 0 0 5px rgba(43,43,43,0.12);
+  box-sizing: border-box;
+  padding: 0 1rem 1.5rem;     /* Reduced padding on left/right and bottom */
+  /* Paper drop shadow and internal ink glow */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 0 80px rgba(43,43,43,0.05);
 }
-.nws-page::-webkit-scrollbar { width: 5px; }
-.nws-page::-webkit-scrollbar-thumb { background: rgba(43,43,43,0.25); }
+
+@media (max-width: 767px) {
+  .nws-page {
+    border: none;             /* Seamless borders on mobile */
+    padding: 0 0.5rem 1rem;   /* Reduced padding on mobile */
+    box-shadow: none;
+  }
+}
+.nws-slide::-webkit-scrollbar { width: 6px; }
+.nws-slide::-webkit-scrollbar-thumb { background: rgba(43,43,43,0.25); }
 
 /* ── Section band (top strip per slide) ─────────────────── */
 .nws-band {
@@ -61,11 +80,8 @@
   background: #F4F1EA;
   padding: 0.4rem 1.25rem;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
+  position: relative; /* Changed from sticky to relative so it scrolls with the page */
   z-index: 10;
-  background: rgba(244,241,234,0.95);
-  backdrop-filter: blur(4px);
 }
 .nws-band-inner {
   display: flex;
@@ -650,7 +666,7 @@
    ============================================================ */
 .tpl-real-newspaper {
   min-height: 100%;
-  padding: 1.5rem 1.5rem 4rem;
+  padding: 1.5rem 1rem 3rem; /* Reduced left/right and bottom margins */
   box-sizing: border-box;
   background: #F4F1EA;
   display: block !important;
@@ -810,6 +826,19 @@
   column-count: 2;
   column-gap: 1.25rem;
   column-rule: 1px solid rgba(43,43,43,0.15);
+  max-height: 180px;            /* Contain first article height within the sheet */
+  overflow: hidden;
+  position: relative;
+}
+.main-body-text::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(transparent, #F4F1EA);
+  pointer-events: none;
 }
 
 /* ── Divider lines ── */
@@ -883,6 +912,19 @@
 }
 .col-body-text {
   margin: 0;
+  max-height: 130px;            /* Contain columns height within sheet grid */
+  overflow: hidden;
+  position: relative;
+}
+.col-body-text::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, #F4F1EA);
+  pointer-events: none;
 }
 .col-content-wrap {
   display: flex;
@@ -904,6 +946,19 @@
   font-size: 0.85rem;
   line-height: 1.6;
   text-align: justify;
+  max-height: 130px;            /* Contain columns height within sheet grid */
+  overflow: hidden;
+  position: relative;
+}
+.col-text-wrap-small::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, #F4F1EA);
+  pointer-events: none;
 }
 
 /* ── Bottom Row (Articles 4 & 5) ── */
@@ -934,8 +989,8 @@
   .nws-arrow--next { left: 0.3rem; }
 
   /* ── Mobile: collapse to single column ── */
-  .tpl-real-newspaper {
-    padding: 1rem 0.75rem 3rem !important;
+    .tpl-real-newspaper {
+    padding: 1rem 0.5rem 3rem !important; /* Reduced padding on mobile */
   }
   .news-masthead-top {
     grid-template-columns: 1fr !important;

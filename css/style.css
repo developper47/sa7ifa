@@ -34,7 +34,7 @@
 
   /* Layout */
   --container-width: 1240px;
-  --header-height: 110px;   /* masthead + nav */
+  --header-height: 80px;   /* masthead + nav */
 
   /* Typography */
   --font-serif: 'Amiri', 'Georgia', serif;
