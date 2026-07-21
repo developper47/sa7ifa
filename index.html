@@ -9,11 +9,202 @@
   <link rel="stylesheet" href="css/style.css?v=3.4">
   <link rel="stylesheet" href="css/pages.css?v=3.4">
   <link rel="stylesheet" href="css/newspaper_slider.css?v=1.0">
+  <!-- Google Fonts for newspaper style -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     /* ── Body override for slider mode ─────────────────── */
     body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
     .site-header { flex-shrink: 0; }
+    /* Hide the large logo masthead on homepage slider to avoid duplication and save vertical space */
+    .site-header #mastheadMain { display: none; }
     .nws-slider { flex: 1; min-height: 0; }
+    
+    /* ── Custom Newspaper Layout Overrides ── */
+    .nws-page {
+      font-family: 'Noto Naskh Arabic', serif;
+      color: #2B2B2B;
+      background-color: #F4F1EA;
+      background-image: repeating-linear-gradient(
+        transparent 0px, transparent 26px,
+        rgba(43,43,43,0.015) 26px, rgba(43,43,43,0.015) 27px
+      );
+      border: 4px double #2B2B2B !important;
+      padding: 16px !important;
+      max-width: 1100px !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 0 100px rgba(43,43,43,0.05);
+    }
+    
+    .headline-font {
+      font-family: 'Amiri', serif;
+    }
+    
+    .cairo-font {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    /* Traditional drop cap */
+    .lettrine::first-letter {
+      font-size: 3.5rem;
+      float: right;
+      line-height: 0.85;
+      margin-left: 0.5rem;
+      margin-top: 0.2rem;
+      font-weight: 700;
+      color: #2B2B2B;
+      font-family: 'Amiri', serif;
+    }
+
+    /* High-contrast grayscale/sepia filter & 1px border */
+    .vintage-image {
+      filter: grayscale(100%) contrast(120%) !important;
+      border: 1px solid #2B2B2B !important;
+      padding: 2px;
+      background-color: #F4F1EA;
+      transition: filter 0.3s ease, transform 0.3s ease;
+    }
+    
+    .vintage-image:hover {
+      filter: grayscale(20%) contrast(110%) !important;
+      transform: scale(1.02);
+    }
+    
+    /* Boxed read more links */
+    .read-more-btn {
+      display: inline-block;
+      border: 1px solid #2B2B2B;
+      padding: 4px 8px;
+      background-color: #F4F1EA;
+      color: #2B2B2B;
+      font-size: 0.8rem;
+      font-weight: bold;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+    }
+    
+    .read-more-btn:hover {
+      background-color: #2B2B2B;
+      color: #F4F1EA;
+      text-decoration: none;
+    }
+    
+    .na-title-btn {
+      transition: color 0.2s;
+    }
+    .na-title-btn:hover {
+      color: #9b1a1a;
+    }
+
+    /* --- Grid & Layout System --- */
+    .grid-3-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .grid-3-col {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      .col-divider-left {
+        border-left: 1px solid #2B2B2B;
+        padding-left: 1.5rem;
+      }
+      .col-divider-right {
+        padding-right: 1.5rem;
+      }
+      .col-divider-both {
+        border-left: 1px solid #2B2B2B;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+    }
+    
+    .flex-row-md {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+    @media (min-width: 768px) {
+      .flex-row-md {
+        flex-direction: row;
+      }
+    }
+    
+    .masthead-col {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+    }
+    @media (min-width: 768px) {
+      .masthead-col {
+        width: 33.333%;
+        margin-bottom: 0;
+      }
+      .masthead-col-right {
+        border-left: 1px solid rgba(43, 43, 43, 0.2);
+        padding-left: 1rem;
+        text-align: right;
+      }
+      .masthead-col-left {
+        border-right: 1px solid rgba(43, 43, 43, 0.2);
+        padding-right: 1rem;
+        text-align: left;
+      }
+    }
+    
+    .text-center { text-align: center; }
+    .text-justify { text-align: justify; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    
+    .w-full { width: 100%; }
+    .h-full { height: 100%; }
+    
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .mt-4 { margin-top: 1rem; }
+    
+    .pt-3 { padding-top: 0.75rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    
+    .border-b-double {
+      border-bottom: 4px double #2B2B2B;
+    }
+    
+    .border-t-double {
+      border-top: 4px double #2B2B2B;
+    }
+    
+    .border-dashed-top {
+      border-top: 1px dashed rgba(43, 43, 43, 0.4);
+    }
+    
+    .border-b-thin {
+      border-bottom: 1px solid #2B2B2B;
+    }
+    
+    .pb-6 { padding-bottom: 1.5rem; }
+    
+    .aspect-16-9 {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+    }
+    
+    .aspect-21-9 {
+      width: 100%;
+      aspect-ratio: 21/9;
+      object-fit: cover;
+    }
+    
+    .red-800 {
+      color: #9b1a1a;
+    }
   </style>
 </head>
 <body>
@@ -132,161 +323,180 @@
       // Helper to strip HTML tags for preview/excerpts
       const stripHtml = html => (html || '').replace(/<[^>]+>/g, '').trim();
 
-      const time0 = p0 ? Math.max(1, Math.ceil(stripHtml(p0.content).split(/\s+/).length / 200)) : 1;
+      const getExcerpt = (post, minLen, maxLen) => {
+        if (!post) return '';
+        const clean = stripHtml(post.content || post.excerpt || '');
+        if (clean.length <= minLen) return clean;
+        const targetLen = Math.floor((minLen + maxLen) / 2);
+        return clean.substring(0, targetLen) + '...';
+      };
+
+      const excerpt0 = getExcerpt(p0, 600, 650);
+      const excerpt1 = getExcerpt(p1, 280, 320);
+      const excerpt2 = getExcerpt(p2, 500, 550);
+      const excerpt3 = getExcerpt(p3, 300, 350);
+      
+      const totalExcerpt4 = getExcerpt(p4, 350, 400);
+      const part1 = totalExcerpt4.substring(0, 250);
+      const part2 = totalExcerpt4.substring(250);
+
+      const accentColor = section.color || '#2B2B2B';
 
       return `<div class="nws-slide" data-section-id="${section.id}">
-        <div class="nws-page tpl-real-newspaper" style="--accent: ${section.color || '#8b1a1a'}">
+        <div class="nws-page tpl-real-newspaper">
           
-          <!-- ── Newspaper Masthead ── -->
-          <div class="news-masthead">
-            <div class="news-masthead-top">
-              <div class="masthead-side-col masthead-side-left">
-                <div class="side-box-inner">
-                  <div class="side-box-title">استراتيجية وطنية</div>
-                  <p class="side-box-text">تأسيس رؤية موحدة لمستقبل الفكر والتحليل في العالم العربي</p>
-                </div>
-              </div>
-              <div class="masthead-center">
-                <h1 class="masthead-title">الصحيفة</h1>
-                <p class="masthead-subtitle">جريدة يومية سياسية مستقلة</p>
-              </div>
-              <div class="masthead-side-col masthead-side-right">
-                <div class="side-box-inner">
-                  <div class="side-box-title">ملف الأسبوع</div>
-                  <p class="side-box-text">تحديات الانتقال التكنولوجي ودور الصحافة الرقمية</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="masthead-info-bar">
-              <span>السبت ٢٧ جويلية ٢٠٢٦ م</span>
-              <span class="info-item-sep">◈</span>
-              <span class="info-center">ملحق ${section.name_ar}</span>
-              <span class="info-item-sep">◈</span>
-              <span>السنة الأولى - العدد ٢٤</span>
-            </div>
-          </div>
-
-          <!-- ── Main Article (Article 1) ── -->
-          ${p0 ? `
-            <article class="news-main-article">
-              <h2 class="main-headline">
-                <button class="na-title-btn na-open-modal" data-post-id="${p0.id}">${p0.title}</button>
-              </h2>
-              <div class="main-byline">
-                <span>بقلم: ${p0.author_name || 'المحرر'}</span>
-                <span>◈</span>
-                <span>زمن القراءة: ${toAr(time0)} دقيقة</span>
+          <!-- Page Header (Masthead) -->
+          <header class="w-full text-center mb-6">
+            <!-- Title and Side Metadata Boxes in a single row -->
+            <div class="flex-row-md py-4 border-b-double">
+              
+              <!-- Right Metadata Box -->
+              <div class="masthead-col masthead-col-right">
+                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">قسم ${section.name_ar}</span>
+                <span class="block text-xs opacity-85 mt-2">تأسست في عام ٢٠٢٦ م ◈ جريدة وطنية مستقلة</span>
               </div>
               
-              <div class="main-content-layout">
-                <div class="main-img-wrap">
-                  <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="main-img">
-                  <span class="main-img-cap">${p0.title}</span>
-                </div>
-                
-                <div class="main-text-cols">
-                  <p class="main-excerpt">${p0.excerpt || stripHtml(p0.content).substring(0, 180)}…</p>
-                  <div class="main-body-text">${p0.content || ''}</div>
-                  <div style="margin-top: 1rem; text-align: left;">
-                    <button class="na-more na-open-modal" data-post-id="${p0.id}">إقرأ المزيد ←</button>
-                  </div>
-                </div>
+              <!-- Center Newspaper Title -->
+              <div class="masthead-col text-center" style="display: flex; flex-direction: column; align-items: center;">
+                <h1 class="text-4xl md:text-6xl font-black headline-font text-center" style="font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1;">
+                  <a href="index.html" class="hover:text-red-900 transition-colors" style="text-decoration: none; color: inherit;">الأخبار الأسبوعية</a>
+                </h1>
+                <span class="text-xs font-semibold cairo-font tracking-widest mt-2 opacity-80 block">اتجاه القراءة من اليمين إلى اليسار (RTL)</span>
               </div>
-            </article>
-          ` : ''}
-
-          <!-- Divider line -->
-          <div class="news-row-divider"></div>
-
-          <!-- ── Middle Row (Articles 2 & 3) ── -->
-          <div class="news-mid-row">
-            <!-- Middle Right Column (Article 2) -->
-            <div class="news-mid-col news-mid-right">
-              ${p1 ? `
-                <div class="col-section-header green-header">${section.name_ar} اليوم</div>
-                <h3 class="col-title">
-                  <button class="na-title-btn na-open-modal" data-post-id="${p1.id}">${p1.title}</button>
-                </h3>
-                <div class="col-byline">بقلم: ${p1.author_name || 'المحرر'}</div>
-                <div class="col-text-cols">
-                  <p class="col-excerpt">${p1.excerpt || stripHtml(p1.content).substring(0, 120)}…</p>
-                  <div class="col-body-text">${p1.content || ''}</div>
-                </div>
-                <div style="margin-top: 0.5rem; text-align: left;">
-                  <button class="na-more na-open-modal" data-post-id="${p1.id}">إقرأ المزيد ←</button>
-                </div>
-              ` : ''}
+              
+              <!-- Left Metadata Box -->
+              <div class="masthead-col masthead-col-left">
+                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">${todayDate}</span>
+                <span class="block text-xs opacity-85 mt-2">المجلد الأول ◈ العدد ٢٤ ◈ الثمن: قرشان</span>
+              </div>
+              
             </div>
+          </header>
 
-            <!-- Middle Left Column (Article 3) -->
-            <div class="news-mid-col news-mid-left">
-              ${p2 ? `
-                <h3 class="col-title red-title">
-                  <button class="na-title-btn na-open-modal" data-post-id="${p2.id}">${p2.title}</button>
-                </h3>
-                <div class="col-byline">بقلم: ${p2.author_name || 'المحرر'}</div>
-                <div class="col-content-wrap">
-                  <div class="col-img-wrap-small">
-                    <img src="${p2.featured_image_url || FALLBACK}" alt="${p2.title}">
-                  </div>
-                  <div class="col-text-wrap-small">
-                    <p class="col-excerpt">${p2.excerpt || stripHtml(p2.content).substring(0, 120)}…</p>
-                    <div class="col-body-text">${p2.content || ''}</div>
-                    <div style="margin-top: 0.5rem; text-align: left;">
-                      <button class="na-more na-open-modal" data-post-id="${p2.id}">إقرأ المزيد ←</button>
-                    </div>
+          <!-- Content Grid (3 Columns) -->
+          <div class="grid-3-col">
+            
+            <!-- COLUMN 1: RIGHT COLUMN (Article 1 - Main Feature) -->
+            <section class="col-divider-left" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <article class="h-full" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">${section.name_ar} اليوم</div>
+                  <h2 class="headline-font mb-3" style="font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.75rem 0;">
+                    <button class="na-title-btn na-open-modal text-right" data-post-id="${p0.id}">${p0.title}</button>
+                  </h2>
+                  <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p0.author_name || 'المحرر'}</div>
+                  
+                  <div class="text-sm text-justify" style="line-height: 1.6;">
+                    <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="vintage-image" style="width: 160px; height: 160px; float: left; margin: 8px; object-fit: cover;">
+                    <p class="lettrine">${excerpt0}</p>
                   </div>
                 </div>
-              ` : ''}
-            </div>
+                <div class="mt-4 pt-3 border-dashed-top text-left">
+                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p0.id}">إقرأ المزيد</button>
+                </div>
+              </article>
+            </section>
+
+            <!-- COLUMN 2: MIDDLE COLUMN (Articles 2 & 3) -->
+            <section class="col-divider-both" style="display: flex; flex-direction: column;">
+              <!-- ARTICLE 2 (Top) -->
+              <article class="border-b-thin pb-6 mb-6" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">شؤون إعلامية</div>
+                  <h2 class="headline-font mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.5rem 0;">
+                    <button class="na-title-btn na-open-modal text-right" data-post-id="${p1.id}">${p1.title}</button>
+                  </h2>
+                  <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p1.author_name || 'المحرر'}</div>
+                  
+                  <div class="mb-3">
+                    <img src="${p1.featured_image_url || FALLBACK}" alt="${p1.title}" class="aspect-16-9 vintage-image">
+                    <span class="block text-center mt-1 opacity-70" style="display: block; font-size: 0.65rem; font-style: italic;">ورشة الصحافة في عصر الحداثة والتحول التمويلي</span>
+                  </div>
+                  
+                  <p class="text-sm text-justify" style="line-height: 1.6;">
+                    ${excerpt1}
+                  </p>
+                </div>
+                <div class="mt-3 text-left">
+                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p1.id}">إقرأ المزيد</button>
+                </div>
+              </article>
+
+              <!-- ARTICLE 3 (Bottom) -->
+              <article style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-top: 1.5rem;">
+                <div>
+                  <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">تعليم ومستقبل</div>
+                  <h2 class="headline-font mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.5rem 0;">
+                    <button class="na-title-btn na-open-modal text-right" data-post-id="${p2.id}">${p2.title}</button>
+                  </h2>
+                  <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p2.author_name || 'المحرر'}</div>
+                  
+                  <div class="text-sm text-justify" style="line-height: 1.6;">
+                    <img src="${p2.featured_image_url || FALLBACK}" alt="${p2.title}" class="vintage-image" style="width: 140px; height: 140px; float: right; margin: 8px; object-fit: cover;">
+                    <p>${excerpt2}</p>
+                  </div>
+                </div>
+                <div class="mt-4 pt-3 border-dashed-top text-left">
+                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p2.id}">إقرأ المزيد</button>
+                </div>
+              </article>
+            </section>
+
+            <!-- COLUMN 3: LEFT COLUMN (Articles 4 & 5) -->
+            <section class="col-divider-right" style="display: flex; flex-direction: column;">
+              <!-- ARTICLE 4 (Top) -->
+              <article class="border-b-thin pb-6 mb-6" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">ثقافات وحوار</div>
+                  <h2 class="headline-font mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.5rem 0;">
+                    <button class="na-title-btn na-open-modal text-right" data-post-id="${p3.id}">${p3.title}</button>
+                  </h2>
+                  <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p3.author_name || 'المحرر'}</div>
+                  
+                  <div class="text-sm text-justify" style="line-height: 1.6;">
+                    <img src="${p3.featured_image_url || FALLBACK}" alt="${p3.title}" class="vintage-image" style="width: 110px; height: 147px; float: left; margin: 8px; object-fit: cover;">
+                    <p>${excerpt3}</p>
+                  </div>
+                </div>
+                <div class="mt-3 text-left">
+                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p3.id}">إقرأ المزيد</button>
+                </div>
+              </article>
+
+              <!-- ARTICLE 5 (Bottom) -->
+              <article style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-top: 1.5rem;">
+                <div>
+                  <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">فنون بصرية</div>
+                  <h2 class="headline-font mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.5rem 0;">
+                    <button class="na-title-btn na-open-modal text-right" data-post-id="${p4.id}">${p4.title}</button>
+                  </h2>
+                  <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p4.author_name || 'المحرر'}</div>
+                  
+                  <p class="text-sm text-justify mb-3" style="line-height: 1.6; margin-bottom: 0.75rem;">
+                    ${part1}
+                  </p>
+                  
+                  <div class="mb-3">
+                    <img src="${p4.featured_image_url || FALLBACK}" alt="${p4.title}" class="aspect-21-9 vintage-image">
+                    <span class="block text-center mt-1 opacity-70" style="display: block; font-size: 0.65rem; font-style: italic;">أفق المدينة القديمة وتجسيد الأصالة البصرية</span>
+                  </div>
+                  
+                  <p class="text-sm text-justify" style="line-height: 1.6;">
+                    ${part2}
+                  </p>
+                </div>
+                <div class="mt-4 pt-3 border-dashed-top text-left">
+                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p4.id}">إقرأ المزيد</button>
+                </div>
+              </article>
+            </section>
+
           </div>
-
-          <!-- Divider line -->
-          <div class="news-row-divider"></div>
-
-          <!-- ── Bottom Row (Articles 4 & 5) ── -->
-          <div class="news-bot-row">
-            <!-- Bottom Left (Article 4) -->
-            <div class="news-bot-col news-bot-left">
-              ${p3 ? `
-                <div class="col-section-header blue-header">شؤون وتطلعات</div>
-                <h3 class="col-title">
-                  <button class="na-title-btn na-open-modal" data-post-id="${p3.id}">${p3.title}</button>
-                </h3>
-                <div class="col-byline">بقلم: ${p3.author_name || 'المحرر'}</div>
-                <div class="col-text-cols">
-                  <p class="col-excerpt">${p3.excerpt || stripHtml(p3.content).substring(0, 120)}…</p>
-                  <div class="col-body-text">${p3.content || ''}</div>
-                </div>
-                <div style="margin-top: 0.5rem; text-align: left;">
-                  <button class="na-more na-open-modal" data-post-id="${p3.id}">إقرأ المزيد ←</button>
-                </div>
-              ` : ''}
-            </div>
-
-            <!-- Bottom Right (Article 5) -->
-            <div class="news-bot-col news-bot-right">
-              ${p4 ? `
-                <h3 class="col-title">
-                  <button class="na-title-btn na-open-modal" data-post-id="${p4.id}">${p4.title}</button>
-                </h3>
-                <div class="col-byline">بقلم: ${p4.author_name || 'المحرر'}</div>
-                <div class="col-content-wrap">
-                  <div class="col-img-wrap-small">
-                    <img src="${p4.featured_image_url || FALLBACK}" alt="${p4.title}">
-                  </div>
-                  <div class="col-text-wrap-small">
-                    <p class="col-excerpt">${p4.excerpt || stripHtml(p4.content).substring(0, 120)}…</p>
-                    <div class="col-body-text">${p4.content || ''}</div>
-                    <div style="margin-top: 0.5rem; text-align: left;">
-                      <button class="na-more na-open-modal" data-post-id="${p4.id}">إقرأ المزيد ←</button>
-                    </div>
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          </div>
+          
+          <!-- Footer Line -->
+          <footer class="mt-6 pt-4 border-t-double text-center text-xs opacity-75 headline-font">
+            <p>© ٢٠٢٦ الأخبار الأسبوعية. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
+          </footer>
 
         </div>
       </div>`;
@@ -321,6 +531,11 @@
       isAnimating = true;
       current = idx;
       const track = document.getElementById('nwsTrack');
+      
+      // Reset scroll position of target slide to top
+      const targetSlide = track.children[idx];
+      if (targetSlide) targetSlide.scrollTop = 0;
+
       // RTL: slides go from RIGHT to LEFT, so positive index moves LEFT (negative %) in LTR
       // We use negative translateX in RTL-aware way: slide N is at offset N * 100% from right
       track.style.transform = `translateX(${idx * 100}%)`;
@@ -409,19 +624,36 @@
       const dotsEl = document.getElementById('nwsDots');
       let slideIndex = 0;
 
-      for (const section of sections) {
-        const posts = allPosts.filter(p => p.section_id === section.id).slice(0, 5);
-        if (posts.length === 0) continue;
+            for (const section of sections) {
+        let posts = allPosts.filter(p => p.section_id === section.id).slice(0, 5);
+        
+        // Pad with placeholder articles to ensure no blank spaces and exactly 5 articles containing images
+        while (posts.length < 5) {
+          posts.push({
+            id: `placeholder-${section.id}-${posts.length}`,
+            title: `خبر افتراضي - قسم ${section.name_ar}`,
+            excerpt: "هذا الخبر هو خبر افتراضي لملء المساحة الفارغة في هذه الصفحة من الصحيفة، ولضمان تنسيق تصميم الجريدة بشكل كامل وجذاب.",
+            content: "هذا النص هو نص افتراضي لملء مكان المقال لضمان عدم وجود مساحات فارغة في تصميم الصفحة الصحفية العريقة. يرجى كتابة ونشر مقالات حقيقية في هذا القسم لتظهر هنا بدلاً من هذا الخبر الافتراضى.",
+            featured_image_url: FALLBACK,
+            author_name: "محرر الصحيفة",
+            published_at: new Date().toISOString()
+          });
+        }
 
         const tplFn = TEMPLATES[0];
         const band = sectionBand(section, slideIndex, sections.length);
         const slideContent = tplFn(posts, section);
 
-        // Inject band inside slide div
+        // Inject band inside the nws-page container of the slide
         const wrapper = document.createElement('div');
         wrapper.innerHTML = slideContent;
         const slideEl = wrapper.firstElementChild;
-        slideEl.insertAdjacentHTML('afterbegin', band);
+        const pageEl = slideEl.querySelector('.nws-page');
+        if (pageEl) {
+          pageEl.insertAdjacentHTML('afterbegin', band);
+        } else {
+          slideEl.insertAdjacentHTML('afterbegin', band);
+        }
         track.appendChild(slideEl);
 
         // Dot

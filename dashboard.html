@@ -192,6 +192,9 @@
           <a href="#sections" class="nav-link" id="navSections"><span>🛡️</span> <span>الأقسام</span></a>
         </li>
         <li class="nav-item">
+          <a href="#users" class="nav-link" id="navUsers"><span>👥</span> <span>إدارة الصحفيين</span></a>
+        </li>
+        <li class="nav-item">
           <a href="#moderate" class="nav-link" id="navModerate"><span>⚖️</span> <span>المراجعة</span></a>
         </li>
       </div>
@@ -235,8 +238,24 @@
       user = await getCurrentUser();
       if (!user) { window.location.href = 'login.html'; return; }
       
-      document.getElementById('userInfo').textContent = `مرحباً، ${user.name}`;
+      document.getElementById('userInfo').textContent = `مرحباً ${user.name}`;
       if (user.role === 'admin') document.getElementById('adminNav').style.display = 'block';
+
+      // Check if journalist is validated
+      if (user.role === 'journalist' && user.is_validated === false) {
+        viewTitle.textContent = 'التحقق من الحساب';
+        viewContainer.innerHTML = `
+          <div style="text-align:center; padding: 3rem 1.5rem; font-family:'Amiri', serif;">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem;">⏳</div>
+            <h2 style="color: var(--accent); margin-bottom: 1rem;">حسابك الصحفي قيد التفعيل</h2>
+            <p style="font-size: 1.1rem; color: #555; max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.6;">
+              حسابك الجديد كصحفي مسجل لدينا ولكنه يحتاج إلى مراجعة وتفعيل من قبل إدارة الموقع لتتمكن من كتابة ونشر المقالات الصحفية. يرجى الانتظار حتى يتم تفعيل حسابك.
+            </p>
+            <a href="index.html" class="btn btn-outline" style="display: inline-block;">العودة للرئيسية</a>
+          </div>
+        `;
+        return;
+      }
 
       renderPostsView();
     }
@@ -252,41 +271,54 @@
 
     // --- VIEW: POSTS ---
     async function renderPostsView(isModerate = false) {
-      viewTitle.textContent = isModerate ? 'مراجعة المقالات' : 'مقالاتي';
-      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ جلب البيانات...</strong></div>';
+      viewTitle.textContent = isModerate ? 'إدارة المقالات المعلقة' : 'المقالات والتدوينات';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ تحميل المقالات...</strong></div>';
       
       try {
         const filter = isModerate ? { status: 'all' } : { author_id: user.id, status: 'all' };
-        const posts = await getPosts(filter);
+        const [posts, sections] = await Promise.all([
+          getPosts(filter),
+          getAllSections(true)
+        ]);
         
         let html = `
-          <div class="section-title-wrap" style="display:flex; justify-content:space-between; align-items:center;">
-            <p>إجمالي المقالات: <strong>${posts.length}</strong></p>
-            ${!isModerate ? '<button class="btn btn-primary" id="createNewPost">+ مقال جديد</button>' : ''}
+          <div class="section-title-wrap" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <p style="margin:0;">عدد المقالات المتاحة: <strong id="postsCount">${posts.length}</strong></p>
+              <select id="dashboardSectionFilter" class="form-control" style="width: 200px; padding: 0.3rem 0.6rem; font-size: 0.9rem; margin-right: 1rem; border-radius:4px; border:1px solid #ddd; background:#fff; color:#333;">
+                <option value="all">كل الأقسام</option>
+                ${sections.map(s => `<option value="${s.id}">${s.name_ar}</option>`).join('')}
+              </select>
+            </div>
+            ${!isModerate ? '<button class="btn btn-primary" id="createNewPost">+ كتابة مقال جديد</button>' : ''}
           </div>
-          <div class="posts-list">
+          <div class="posts-list" id="dashboardPostsList">
         `;
 
         if (posts.length === 0) {
-          html += '<p class="text-center p-4">لا توجد مقالات حالياً.</p>';
+          html += '<p class="text-center p-4">لا توجد مقالات منشورة أو معلقة بعد.</p>';
         } else {
           posts.forEach(p => {
             const status = statusLabel(p.status);
             html += `
-              <div class="list-item">
+              <div class="list-item" data-section-id="${p.section_id || ''}">
                 <div>
                   <div style="font-weight:700; font-size:1.15rem; margin-bottom:0.4rem;">${p.title}</div>
                   <div style="font-size:0.85rem; color:#636e72;">
                     <span class="status-badge ${status.css}" style="padding: 2px 8px; border-radius:4px; font-size:0.75rem;">${status.label}</span>
                     <span style="margin: 0 0.5rem;">|</span>
-                    <span>👤 ${p.author_name}</span>
+                    <span>الكاتب: ${p.author_name}</span>
+                    ${p.sections ? `<span style="margin: 0 0.5rem;">|</span><span style="color:var(--accent); font-weight:600;">${p.sections.name_ar}</span>` : ''}
                   </div>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
                   <a href="article.html?id=${p.id}" target="_blank" class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.85rem;">عرض</a>
                   ${!isModerate ? `<button class="btn btn-outline edit-post" data-id="${p.id}" style="padding:0.4rem 0.8rem; font-size:0.85rem;">تعديل</button>` : ''}
                   ${isModerate && user.role === 'admin' ? `
-                    <button class="btn btn-primary moderate-post" data-id="${p.id}" data-status="published" style="padding:0.4rem 0.8rem; font-size:0.85rem;">نشر</button>
+                    <button class="btn btn-primary moderate-post" data-id="${p.id}" data-status="published" style="padding:0.4rem 0.8rem; font-size:0.85rem;">تفعيل ونشر</button>
+                  ` : ''}
+                  ${user.role === 'admin' ? `
+                    <button class="btn btn-danger delete-post" data-id="${p.id}" style="padding:0.4rem 0.8rem; font-size:0.85rem; background-color:#ff7675; color:white; border:none; border-radius:4px; cursor:pointer;">حذف</button>
                   ` : ''}
                 </div>
               </div>
@@ -295,6 +327,27 @@
         }
         html += '</div>';
         viewContainer.innerHTML = html;
+
+        // Apply filtering logic
+        const filterSelect = document.getElementById('dashboardSectionFilter');
+        const postsList = document.getElementById('dashboardPostsList');
+        const postsCount = document.getElementById('postsCount');
+        
+        filterSelect.onchange = () => {
+          const selectedSecId = filterSelect.value;
+          const items = postsList.querySelectorAll('.list-item');
+          let count = 0;
+          items.forEach(item => {
+            const itemSecId = item.dataset.sectionId;
+            if (selectedSecId === 'all' || itemSecId === selectedSecId) {
+              item.style.display = 'flex';
+              count++;
+            } else {
+              item.style.display = 'none';
+            }
+          });
+          postsCount.textContent = count;
+        };
 
         const createBtn = document.getElementById('createNewPost');
         if (createBtn) createBtn.onclick = () => renderPostEditor();
@@ -305,8 +358,18 @@
           btn.onclick = async () => {
             try {
               await moderatePost(btn.dataset.id, btn.dataset.status);
-              showToast('تمت الموافقة على النشر');
+              showToast('تم تعديل حالة المقال بنجاح');
               renderPostsView(true);
+            } catch (err) { showToast(err.message, 'error'); }
+          };
+        });
+        viewContainer.querySelectorAll('.delete-post').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المقال نهائياً؟')) return;
+            try {
+              await deletePost(btn.dataset.id);
+              showToast('تم حذف المقال بنجاح');
+              renderPostsView(isModerate);
             } catch (err) { showToast(err.message, 'error'); }
           };
         });
@@ -436,15 +499,23 @@
     function renderSectionModal(sec = null) {
       const isEdit = !!sec;
       openModal(`
-        <h2 style="font-family:'Amiri',serif; margin-bottom:1.5rem;">${isEdit ? 'تعديل قسم' : 'قسم جديد'}</h2>
+        <h2 style="font-family:'Amiri',serif; margin-bottom:1.5rem;">${isEdit ? 'تعديل قسم' : 'إضافة قسم جديد'}</h2>
         <form id="secForm">
           <div class="form-group">
-            <label class="form-label">الاسم (عربي)</label>
+            <label class="form-label">الاسم (العربية)</label>
             <input type="text" class="form-control" id="secAr" value="${sec?.name_ar || ''}" required>
           </div>
           <div class="form-group">
-            <label class="form-label">الرابط (Slug - إنجليزي)</label>
+            <label class="form-label">المعرف (Slug - بالإنجليزية)</label>
             <input type="text" class="form-control" id="secSlug" value="${sec?.slug || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">رمز القسم المميز (Emoji)</label>
+            <input type="text" class="form-control" id="secIcon" value="${sec?.icon || '📰'}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">لون القسم المميز (Accent Color)</label>
+            <input type="color" class="form-control" id="secColor" value="${sec?.color || '#8b1a1a'}" style="height:40px; padding:0; width:100%;">
           </div>
           <div style="display:flex; gap:1rem; margin-top:2rem;">
             <button type="submit" class="btn btn-primary" id="saveSecBtn">حفظ القسم</button>
@@ -456,20 +527,105 @@
       document.getElementById('secForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('saveSecBtn');
-        btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
+        btn.disabled = true; btn.textContent = 'جاري الحفظ...';
         try {
           const payload = {
             name_ar: document.getElementById('secAr').value,
             name_en: document.getElementById('secAr').value,
-            slug: document.getElementById('secSlug').value
+            slug: document.getElementById('secSlug').value,
+            icon: document.getElementById('secIcon').value,
+            color: document.getElementById('secColor').value
           };
           if (isEdit) await updateSection(sec.id, payload);
           else await createSection(payload);
-          showToast('تم الحفظ بنجاح');
+          showToast('تم حفظ القسم بنجاح');
           closeModal();
           renderSectionsView();
         } catch (err) { showToast(err.message, 'error'); btn.disabled = false; btn.textContent = 'حفظ القسم'; }
       };
+    }
+
+    // --- VIEW: USERS (Admin Only) ---
+    async function renderUsersView() {
+      viewTitle.textContent = 'إدارة حسابات الصحفيين وتفعيلها';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جارٍ تحميل المستخدمين...</strong></div>';
+      try {
+        const { data: profiles, error } = await supabase.from('profiles').select('*');
+        if (error) throw error;
+        
+        const journalists = (profiles || []).filter(p => p.role === 'journalist');
+        
+        let html = `
+          <div class="section-title-wrap" style="display:flex; justify-content:space-between; align-items:center;">
+            <p>عدد الصحفيين المسجلين: <strong>${journalists.length}</strong></p>
+          </div>
+          <div class="users-list">
+        `;
+        
+        if (journalists.length === 0) {
+          html += '<p class="text-center p-4">لا يوجد صحفيون معلقون أو مسجلون بعد.</p>';
+        } else {
+          journalists.forEach(j => {
+            const isValidated = j.is_validated !== false;
+            const statusText = isValidated ? 'نشط ومفعل' : 'معلق بانتظار التفعيل';
+            const badgeClass = isValidated ? 'status-badge status-published' : 'status-badge status-pending';
+            
+            html += `
+              <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; padding:1rem; border-bottom:1px solid #eee;">
+                <div>
+                  <div style="font-weight:700; font-size:1.1rem; margin-bottom:0.25rem;">${j.name}</div>
+                  <div style="font-size:0.85rem; color:#666;">
+                    <span>البريد الإلكتروني: ${j.email}</span>
+                    <span style="margin:0 0.5rem;">|</span>
+                    <span class="${badgeClass}" style="padding:2px 8px; border-radius:4px; font-size:0.75rem;">${statusText}</span>
+                  </div>
+                </div>
+                <div>
+                  ${isValidated ? 
+                    `<button class="btn btn-outline toggle-user-status" data-id="${j.id}" data-action="deactivate" style="color:#d63031; border-color:#d63031; font-size:0.85rem; padding:0.4rem 0.8rem; cursor:pointer;">إلغاء التفعيل</button>` :
+                    `<button class="btn btn-primary toggle-user-status" data-id="${j.id}" data-action="activate" style="background-color:#2ecc71; border-color:#2ecc71; color:white; font-size:0.85rem; padding:0.4rem 0.8rem; cursor:pointer;">تفعيل الحساب</button>`
+                  }
+                </div>
+              </div>
+            `;
+          });
+        }
+        
+        html += '</div>';
+        viewContainer.innerHTML = html;
+        
+        viewContainer.querySelectorAll('.toggle-user-status').forEach(btn => {
+          btn.onclick = async () => {
+            const uid = btn.dataset.id;
+            const act = btn.dataset.action;
+            const newStatus = act === 'activate';
+            btn.disabled = true;
+            btn.textContent = 'جاري المعالجة...';
+            try {
+              // Update in profiles table
+              const { error: updErr } = await supabase.from('profiles').update({ is_validated: newStatus }).eq('id', uid);
+              if (updErr) throw updErr;
+              
+              // Also update in sa7ifa_users local session registry
+              const users = JSON.parse(localStorage.getItem('sa7ifa_users')) || [];
+              const uIdx = users.findIndex(u => u.id === uid);
+              if (uIdx !== -1) {
+                users[uIdx].is_validated = newStatus;
+                localStorage.setItem('sa7ifa_users', JSON.stringify(users));
+              }
+              
+              showToast(newStatus ? 'تم تفعيل حساب الصحفي بنجاح' : 'تم إلغاء تفعيل حساب الصحفي');
+              renderUsersView();
+            } catch (err) {
+              showToast(err.message, 'error');
+              btn.disabled = false;
+              btn.textContent = act === 'activate' ? 'تفعيل الحساب' : 'إلغاء التفعيل';
+            }
+          };
+        });
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     }
 
     // --- NAV ---
@@ -478,6 +634,12 @@
 
     document.getElementById('navPosts').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(); };
     document.getElementById('navSections').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSectionsView(); };
+    
+    const navUsers = document.getElementById('navUsers');
+    if (navUsers) {
+      navUsers.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderUsersView(); };
+    }
+    
     document.getElementById('navModerate').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(true); };
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); window.location.href = 'index.html'; };
 

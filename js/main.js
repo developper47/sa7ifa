@@ -179,6 +179,7 @@ export async function renderHeader() {
           <ul class="nav-links-broadsheet" id="navLinks">
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
+            <li><a href="weekly.html" ${currentPage === 'weekly.html' ? 'class="active"' : ''}>العدد الأسبوعي</a></li>
             <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
         </div>
@@ -197,6 +198,7 @@ export async function renderHeader() {
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
         ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
+        <li><a href="weekly.html">العدد الأسبوعي</a></li>
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">

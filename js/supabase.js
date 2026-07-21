@@ -272,7 +272,7 @@ class SupabaseQueryBuilder {
 
     let data = JSON.parse(localStorage.getItem(`sa7ifa_db_${this.table}`));
 
-    // Seed initial data if table is still null or empty (e.g. other tables)
+        // Seed initial data if table is still null or empty (e.g. other tables)
     if (!data || data.length === 0) {
       if (this.table === 'sections') {
         data = SECTIONS_SEED;
@@ -282,6 +282,42 @@ class SupabaseQueryBuilder {
         localStorage.setItem(`sa7ifa_db_${this.table}`, JSON.stringify(data));
       } else if (this.table === 'site_settings') {
         data = SETTINGS_SEED;
+        localStorage.setItem(`sa7ifa_db_${this.table}`, JSON.stringify(data));
+      } else if (this.table === 'profiles') {
+        data = [
+          {
+            id: '00000000-0000-0000-0000-000000000000',
+            name: 'مدير الصحيفة',
+            email: 'developper47@gmail.com',
+            role: 'admin',
+            is_validated: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'usr_j1',
+            name: 'أحمد الصحفي',
+            email: 'ahmed@sa7ifa.com',
+            role: 'journalist',
+            is_validated: false,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'usr_j2',
+            name: 'سارة الكاتبة',
+            email: 'sara@sa7ifa.com',
+            role: 'journalist',
+            is_validated: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'usr_r1',
+            name: 'خالد القارئ',
+            email: 'khaled@sa7ifa.com',
+            role: 'reader',
+            is_validated: true,
+            created_at: new Date().toISOString()
+          }
+        ];
         localStorage.setItem(`sa7ifa_db_${this.table}`, JSON.stringify(data));
       } else {
         data = [];
@@ -408,18 +444,57 @@ class SupabaseQueryBuilder {
   }
 }
 
+function getSeedUsers() {
+  let users = JSON.parse(localStorage.getItem('sa7ifa_users'));
+  if (!users || users.length === 0) {
+    users = [
+      {
+        id: '00000000-0000-0000-0000-000000000000',
+        email: 'developper47@gmail.com',
+        password: 'admin123',
+        user_metadata: { full_name: 'مدير الصحيفة', role: 'admin' },
+        role: 'admin'
+      },
+      {
+        id: 'usr_j1',
+        email: 'ahmed@sa7ifa.com',
+        password: '123456',
+        user_metadata: { full_name: 'أحمد الصحفي', role: 'journalist' },
+        role: 'journalist'
+      },
+      {
+        id: 'usr_j2',
+        email: 'sara@sa7ifa.com',
+        password: '123456',
+        user_metadata: { full_name: 'سارة الكاتبة', role: 'journalist' },
+        role: 'journalist'
+      },
+      {
+        id: 'usr_r1',
+        email: 'khaled@sa7ifa.com',
+        password: '123456',
+        user_metadata: { full_name: 'خالد القارئ', role: 'reader' },
+        role: 'reader'
+      }
+    ];
+    localStorage.setItem('sa7ifa_users', JSON.stringify(users));
+  }
+  return users;
+}
+
 const mockAuth = {
   async signUp({ email, password, options }) {
-    const users = JSON.parse(localStorage.getItem('sa7ifa_users')) || [];
+    const users = getSeedUsers();
     if (users.some(u => u.email === email)) {
       return { data: { user: null }, error: new Error('User already exists') };
     }
     const name = options?.data?.full_name || 'مستخدم جديد';
+    const role = options?.data?.role || 'reader';
     const user = {
       id: crypto.randomUUID ? crypto.randomUUID() : 'usr_' + Math.random().toString(36).substr(2, 9),
       email,
-      user_metadata: { full_name: name },
-      role: email === 'developper47@gmail.com' ? 'admin' : 'user'
+      user_metadata: { full_name: name, role: role },
+      role: email === 'developper47@gmail.com' ? 'admin' : role
     };
     users.push({ ...user, password });
     localStorage.setItem('sa7ifa_users', JSON.stringify(users));
@@ -431,6 +506,7 @@ const mockAuth = {
       name: name,
       email: email,
       role: user.role,
+      is_validated: user.role === 'admin' || user.role === 'reader' ? true : false,
       created_at: new Date().toISOString()
     });
     localStorage.setItem('sa7ifa_db_profiles', JSON.stringify(profiles));
@@ -440,26 +516,34 @@ const mockAuth = {
   },
 
   async signInWithPassword({ email, password }) {
+    const users = getSeedUsers();
     if (email === 'developper47@gmail.com' && password === 'admin123') {
       const mockAdmin = {
         id: '00000000-0000-0000-0000-000000000000',
         email: 'developper47@gmail.com',
-        user_metadata: { full_name: 'رئيس التحرير' },
+        user_metadata: { full_name: 'مدير الصحيفة', role: 'admin' },
         role: 'admin'
       };
       localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(mockAdmin));
       return { data: { user: mockAdmin }, error: null };
     }
 
-    const users = JSON.parse(localStorage.getItem('sa7ifa_users')) || [];
     const found = users.find(u => u.email === email && u.password === password);
     if (!found) {
-      return { data: { user: null }, error: new Error('خطأ في البريد الإلكتروني أو كلمة المرور') };
+      return { data: { user: null }, error: new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة') };
     }
-    localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(found));
-    return { data: { user: found }, error: null };
+    
+    // Fetch validation status from profile to see if user is a validated journalist
+    const profiles = JSON.parse(localStorage.getItem('sa7ifa_db_profiles')) || [];
+    const prof = profiles.find(p => p.id === found.id);
+    const mockUser = {
+      ...found,
+      is_validated: prof ? prof.is_validated : true
+    };
+    
+    localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(mockUser));
+    return { data: { user: mockUser }, error: null };
   },
-
   async signOut() {
     localStorage.removeItem(MOCK_SESSION_KEY);
     return { error: null };

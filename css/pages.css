@@ -1267,7 +1267,7 @@
 }
 
 .masthead-main {
-  padding: 2.5rem 0 1.5rem;
+  padding: 1rem 0 0.8rem;
   background: var(--paper);
 }
 
@@ -1286,26 +1286,26 @@
 
 .broadsheet-logo-title {
   font-family: var(--font-serif);
-  font-size: 5rem;
+  font-size: 3.2rem;
   line-height: 1;
   color: var(--ink);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .logo-subtitle {
   font-family: var(--font-serif);
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-style: italic;
   color: var(--ink-light);
 }
 
 .masthead-meta-box {
   border: 1px solid var(--ink-faint);
-  padding: 0.75rem 0.5rem;
+  padding: 0.4rem 0.5rem;
   background: var(--paper-dark);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   box-shadow: inset 0 0 4px rgba(0,0,0,0.02);
 }
@@ -1481,6 +1481,11 @@
   margin-bottom: 1.25rem;
 }
 .post-card--newspaper:last-child {
+  border-bottom: none;
+}
+#postsGrid .post-card--newspaper {
+  margin-bottom: 0;
+  padding-bottom: 0;
   border-bottom: none;
 }
 .post-card__newspaper-inner {

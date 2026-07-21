@@ -13,12 +13,12 @@ const MOCK_SESSION_KEY = 'magazine_mock_session';
 /**
  * Sign up a new user and create their profile.
  */
-export async function signUp(name, email, password) {
+export async function signUp(name, email, password, role = 'reader') {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } }
+      options: { data: { full_name: name, role: role } }
     });
     if (error) throw error;
     return { success: true, user: data.user };
@@ -86,7 +86,7 @@ export async function getCurrentUser() {
     // Fetch role from profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, name')
+      .select('role, name, is_validated')
       .eq('id', user.id)
       .single();
 
@@ -94,7 +94,8 @@ export async function getCurrentUser() {
       id: user.id,
       email: user.email,
       name: profile?.name || user.user_metadata?.full_name || 'مستخدم',
-      role: profile?.role || 'user'
+      role: profile?.role || 'reader',
+      is_validated: profile?.is_validated !== false
     };
   } catch (error) {
     console.warn("Supabase session fetch failed:", error.message);
