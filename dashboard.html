@@ -163,11 +163,31 @@
     }
     .form-control:focus { border-color: var(--dash-accent); outline: none; box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.1); }
 
-    /* Mobile */
+    /* Mobile / Tablet dashboard responsiveness */
     @media (max-width: 1024px) {
-      .sidebar { width: 80px; padding: 1.5rem 0.5rem; align-items: center; }
-      .sidebar-brand, .nav-link span, .nav-label { display: none; }
-      .main-content-dash { margin-right: 80px; width: calc(100% - 80px); padding: 1.5rem; }
+      .sidebar {
+        right: -280px;
+        transition: right 0.3s ease;
+        width: 280px;
+        height: 100vh;
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar.open {
+        right: 0;
+      }
+      .sidebar-brand, .nav-link span, .nav-label {
+        display: block !important;
+      }
+      .main-content-dash {
+        margin-right: 0 !important;
+        width: 100% !important;
+        padding: 1.5rem;
+      }
+      .dash-hamburger-btn {
+        display: block !important;
+      }
     }
   </style>
 </head>
@@ -211,8 +231,9 @@
 
   <!-- Main Content -->
   <main class="main-content-dash">
-    <header class="dash-header">
-      <h1 id="viewTitle">لوحة التحكم</h1>
+    <header class="dash-header" style="display: flex; align-items: center; gap: 1rem;">
+      <button id="sidebarToggle" class="dash-hamburger-btn" style="display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--dash-sidebar); padding: 0.5rem; line-height: 1;">☰</button>
+      <h1 id="viewTitle" style="flex-grow: 1; margin: 0;">لوحة التحكم</h1>
       <div id="userInfo" style="font-weight: 600;">...</div>
     </header>
 
@@ -243,6 +264,21 @@
       
       document.getElementById('userInfo').textContent = `مرحباً ${user.name}`;
       if (user.role === 'admin') document.getElementById('adminNav').style.display = 'block';
+
+      // Sidebar Mobile Toggle
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebarToggle && sidebar) {
+        sidebarToggle.onclick = (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.sidebar') && !e.target.closest('#sidebarToggle')) {
+            sidebar.classList.remove('open');
+          }
+        });
+      }
 
       // Check if journalist is validated
       if (user.role === 'journalist' && user.is_validated === false) {
@@ -462,6 +498,24 @@
 
       try {
         const sections = await getSections();
+        
+        // Inject RTE CSS styles
+        if (!document.getElementById('rte-styles')) {
+          const style = document.createElement('style');
+          style.id = 'rte-styles';
+          style.innerHTML = `
+            .rte-container { border: 1.5px solid #eee; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 1.5rem; }
+            .rte-toolbar { background: #f8f9fa; border-bottom: 1.5px solid #eee; padding: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+            .rte-btn { border: 1.5px solid #dfe6e9 !important; background: #ffffff !important; color: #2d3436 !important; border-radius: 6px !important; padding: 5px 10px !important; font-size: 0.9rem !important; cursor: pointer !important; transition: all 0.2s !important; display: inline-flex !important; align-items: center; gap: 4px; }
+            .rte-btn:hover { background: #f1f2f6 !important; border-color: #b2bec3 !important; }
+            .rte-select { border: 1.5px solid #dfe6e9 !important; background: #ffffff !important; color: #2d3436 !important; border-radius: 6px !important; padding: 5px !important; font-size: 0.9rem !important; cursor: pointer !important; }
+            .rte-editor { min-height: 400px; max-height: 600px; overflow-y: auto; padding: 1.2rem; border: none; outline: none; background: #fff; font-family: 'Noto Naskh Arabic', serif !important; font-size: 1.1rem; line-height: 1.8; color: #2b2b2b; text-align: right; }
+            .rte-editor h2, .rte-editor h3, .rte-editor h4 { font-family: 'Amiri', serif !important; color: #8b1a1a; margin-top: 1rem; margin-bottom: 0.5rem; }
+            .rte-editor p { margin-bottom: 1rem; }
+          `;
+          document.head.appendChild(style);
+        }
+
         viewContainer.innerHTML = `
           <form id="postForm">
             <div class="form-group">
@@ -476,17 +530,75 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">رابط الصورة</label>
-                <input type="url" class="form-control" id="postImage" value="${post?.featured_image_url || ''}" placeholder="https://example.com/image.jpg">
-                <div id="imagePreview" style="margin-top:0.5rem; border:1px dashed #ddd; border-radius:8px; height:100px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8f9fa;">
+                <label class="form-label">صورة المقال</label>
+                <div style="display:flex; gap:1.5rem; margin-bottom:0.6rem; font-size:0.9rem;">
+                  <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                    <input type="radio" name="imageSource" id="imgSourceLink" checked style="cursor:pointer;"> رابط خارجي
+                  </label>
+                  <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                    <input type="radio" name="imageSource" id="imgSourceUpload" style="cursor:pointer;"> تحميل ملف
+                  </label>
+                </div>
+                
+                <div id="imgLinkContainer">
+                  <input type="url" class="form-control" id="postImage" value="${post?.featured_image_url || ''}" placeholder="https://example.com/image.jpg">
+                </div>
+                <div id="imgUploadContainer" style="display:none;">
+                  <input type="file" class="form-control" id="postImageFile" accept="image/*">
+                </div>
+
+                <div id="imagePreview" style="margin-top:0.5rem; border:1px dashed #ddd; border-radius:8px; height:120px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8f9fa;">
                   ${post?.featured_image_url ? `<img src="${post.featured_image_url}" style="width:100%;height:100%;object-fit:cover;">` : '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>'}
                 </div>
               </div>
             </div>
+
             <div class="form-group">
               <label class="form-label">المحتوى</label>
-              <textarea class="form-control" id="postContent" style="min-height: 450px;" required>${post?.content || ''}</textarea>
+              
+              <div class="rte-container">
+                <div class="rte-toolbar">
+                  <!-- Bold -->
+                  <button type="button" class="rte-btn" data-command="bold" title="خط عريض" style="font-weight:bold;">B</button>
+                  
+                  <!-- Font Size -->
+                  <select class="rte-select" data-command="fontSize" title="حجم الخط">
+                    <option value="">حجم الخط</option>
+                    <option value="3">عادي</option>
+                    <option value="4">متوسط</option>
+                    <option value="5">كبير</option>
+                    <option value="6">كبير جداً</option>
+                    <option value="7">ضخم</option>
+                  </select>
+
+                  <!-- Color -->
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:0.8rem; color:#666;">اللون:</span>
+                    <input type="color" class="rte-color" data-command="foreColor" value="#2b2b2b" title="لون الخط" style="width: 32px; height: 28px; padding:0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">
+                  </div>
+
+                  <!-- Ordered List -->
+                  <button type="button" class="rte-btn" data-command="insertOrderedList" title="قائمة مرقمة">1. قائمة مرقمة</button>
+
+                  <!-- Headings -->
+                  <select class="rte-select" data-command="heading" title="تنسيق العناوين">
+                    <option value="">تنسيق العناوين</option>
+                    <option value="H2">عنوان رئيسي (H2)</option>
+                    <option value="H3">عنوان فرعي (H3)</option>
+                    <option value="H4">عنوان جانبي (H4)</option>
+                    <option value="P">فقرة عادية</option>
+                  </select>
+
+                  <!-- Heading Auto-Numbering -->
+                  <button type="button" class="rte-btn" id="btnNumberHeadings" title="ترقيم العناوين تلقائياً">🔢 ترقيم العناوين</button>
+                </div>
+                
+                <div class="rte-editor" id="postContentEditor" contenteditable="true">
+                  ${post?.content || '<p><br></p>'}
+                </div>
+              </div>
             </div>
+
             <div style="display:flex; gap:1rem; margin-top:1.5rem;">
               <button type="submit" class="btn btn-primary" id="savePostBtn">حفظ المقال</button>
               <button type="button" class="btn btn-outline" onclick="renderPostsView()">إلغاء</button>
@@ -494,8 +606,29 @@
           </form>
         `;
 
+        const imgLinkRadio = document.getElementById('imgSourceLink');
+        const imgUploadRadio = document.getElementById('imgSourceUpload');
+        const imgLinkContainer = document.getElementById('imgLinkContainer');
+        const imgUploadContainer = document.getElementById('imgUploadContainer');
         const imgInput = document.getElementById('postImage');
+        const imgFileInput = document.getElementById('postImageFile');
         const imgPreview = document.getElementById('imagePreview');
+
+        imgLinkRadio.onchange = () => {
+          imgLinkContainer.style.display = 'block';
+          imgUploadContainer.style.display = 'none';
+        };
+        imgUploadRadio.onchange = () => {
+          imgLinkContainer.style.display = 'none';
+          imgUploadContainer.style.display = 'block';
+        };
+
+        if (post?.featured_image_url && post.featured_image_url.startsWith('data:image')) {
+          imgUploadRadio.checked = true;
+          imgLinkContainer.style.display = 'none';
+          imgUploadContainer.style.display = 'block';
+        }
+
         imgInput.oninput = () => {
           const url = imgInput.value.trim();
           if (url) {
@@ -505,17 +638,110 @@
           }
         };
 
+        imgFileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const dataUrl = event.target.result;
+              imgInput.value = dataUrl;
+              imgPreview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        // WYSIWYG command handlers
+        const editor = document.getElementById('postContentEditor');
+        const toolbar = document.querySelector('.rte-toolbar');
+
+        toolbar.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-command]');
+          if (!btn) return;
+          const cmd = btn.dataset.command;
+          
+          e.preventDefault();
+          if (cmd === 'bold' || cmd === 'insertOrderedList') {
+            document.execCommand(cmd, false, null);
+          }
+          editor.focus();
+        });
+
+        const fontSelect = toolbar.querySelector('select[data-command="fontSize"]');
+        fontSelect.onchange = () => {
+          const val = fontSelect.value;
+          if (val) {
+            document.execCommand('fontSize', false, val);
+          }
+          fontSelect.value = '';
+          editor.focus();
+        };
+
+        const colorInput = toolbar.querySelector('input[data-command="foreColor"]');
+        colorInput.onchange = () => {
+          const val = colorInput.value;
+          if (val) {
+            document.execCommand('foreColor', false, val);
+          }
+          editor.focus();
+        };
+
+        const headingSelect = toolbar.querySelector('select[data-command="heading"]');
+        headingSelect.onchange = () => {
+          const val = headingSelect.value;
+          if (val) {
+            if (val === 'P') {
+              document.execCommand('formatBlock', false, '<p>');
+            } else {
+              document.execCommand('formatBlock', false, '<' + val + '>');
+            }
+          }
+          headingSelect.value = '';
+          editor.focus();
+        };
+
+        const numberHeadingsBtn = document.getElementById('btnNumberHeadings');
+        numberHeadingsBtn.onclick = (e) => {
+          e.preventDefault();
+          
+          const headings = editor.querySelectorAll('h2, h3, h4');
+          let h2Count = 0;
+          let h3Count = 0;
+          let h4Count = 0;
+          
+          headings.forEach(heading => {
+            let text = heading.innerHTML.replace(/^\d+(\.\d+)*\.?\s+/, '');
+            const tag = heading.tagName.toLowerCase();
+            
+            if (tag === 'h2') {
+              h2Count++;
+              h3Count = 0;
+              h4Count = 0;
+              heading.innerHTML = `${h2Count}. ${text}`;
+            } else if (tag === 'h3') {
+              h3Count++;
+              h4Count = 0;
+              heading.innerHTML = `${h2Count}.${h3Count}. ${text}`;
+            } else if (tag === 'h4') {
+              h4Count++;
+              heading.innerHTML = `${h2Count}.${h3Count}.${h4Count}. ${text}`;
+            }
+          });
+          editor.focus();
+        };
+
         document.getElementById('postForm').onsubmit = async (e) => {
           e.preventDefault();
           const btn = document.getElementById('savePostBtn');
           btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
           try {
+            const editorContent = editor.innerHTML;
             const payload = {
               title: document.getElementById('postTitle').value,
               section_id: document.getElementById('postSection').value,
-              featured_image_url: document.getElementById('postImage').value,
-              content: document.getElementById('postContent').value,
-              excerpt: document.getElementById('postContent').value.substring(0, 180).replace(/<[^>]+>/g, ''),
+              featured_image_url: imgInput.value,
+              content: editorContent,
+              excerpt: editorContent.substring(0, 180).replace(/<[^>]+>/g, ''),
               author_id: user.id,
               author_name: user.name,
               status: user.role === 'admin' ? 'published' : 'pending'
@@ -551,7 +777,8 @@
                   <div style="font-weight:700;">${s.name_ar}</div>
                   <div style="font-size:0.8rem; color:#888;">URL: /${s.slug}</div>
                 </div>
-                <div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                  <button class="btn btn-outline manage-featured" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--dash-accent); border-color:var(--dash-accent);">🔍 مقالات الرئيسية</button>
                   <button class="btn btn-outline edit-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem;">تعديل</button>
                   <button class="btn btn-outline del-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--accent);">حذف</button>
                 </div>
@@ -563,6 +790,9 @@
         viewContainer.querySelectorAll('.edit-sec').forEach(btn => {
           btn.onclick = () => renderSectionModal(sections.find(s => s.id === btn.dataset.id));
         });
+        viewContainer.querySelectorAll('.manage-featured').forEach(btn => {
+          btn.onclick = () => renderFeaturedPostsModal(btn.dataset.id);
+        });
         viewContainer.querySelectorAll('.del-sec').forEach(btn => {
           btn.onclick = async () => {
             if (confirm('حذف هذا القسم؟')) {
@@ -573,6 +803,96 @@
         });
       } catch (err) { showToast(err.message, 'error'); }
     }
+
+    async function renderFeaturedPostsModal(sectionId) {
+      openModal('<div class="text-center p-4"><strong>جاري تحميل المقالات...</strong></div>');
+      try {
+        const [posts, sections] = await Promise.all([
+          getPosts({ status: 'published' }),
+          getAllSections(true)
+        ]);
+        const sec = sections.find(s => s.id === sectionId);
+        if (!sec) throw new Error('القسم غير موجود');
+
+        const secPosts = posts.filter(p => p.section_id === sectionId);
+        const currentFeatured = sec.featured_posts || [];
+
+        let html = `
+          <h2 style="font-family:'Amiri',serif; margin-bottom:1rem;">اختر 5 مقالات للرئيسية - قسم ${sec.name_ar}</h2>
+          <p style="font-size:0.85rem; color:#666; margin-bottom:1.5rem;">يرجى تحديد 5 مقالات كحد أقصى ليتم عرضها في الصفحة الرئيسية ضمن هذا القسم.</p>
+          <form id="featuredPostsForm">
+            <div style="max-height: 350px; overflow-y: auto; border: 1px solid #eee; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        `;
+
+        if (secPosts.length === 0) {
+          html += '<p class="text-center p-4">لا توجد مقالات منشورة في هذا القسم.</p>';
+        } else {
+          secPosts.forEach(p => {
+            const isChecked = currentFeatured.includes(p.id) ? 'checked' : '';
+            html += `
+              <div style="display:flex; align-items:flex-start; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #f9f9f9; padding-bottom:0.5rem;">
+                <input type="checkbox" class="featured-post-check" value="${p.id}" ${isChecked} style="margin-top:0.3rem; width:18px; height:18px; cursor:pointer;">
+                <label style="cursor:pointer; font-size:0.95rem; text-align:right; flex-grow:1;">
+                  <strong>${p.title}</strong><br>
+                  <small style="color:#888;">الكاتب: ${p.author_name} | التاريخ: ${new Date(p.published_at).toLocaleDateString('ar-EG')}</small>
+                </label>
+              </div>
+            `;
+          });
+        }
+
+        html += `
+            </div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+              <button type="submit" class="btn btn-primary" id="saveFeaturedBtn" ${secPosts.length === 0 ? 'disabled' : ''}>حفظ التحديد</button>
+              <button type="button" class="btn btn-outline" id="closeFeaturedModal">إلغاء</button>
+            </div>
+          </form>
+        `;
+
+        openModal(html);
+        document.getElementById('closeFeaturedModal').onclick = closeModal;
+
+        const checkboxes = document.querySelectorAll('.featured-post-check');
+        const updateCheckboxStates = () => {
+          const checkedCount = document.querySelectorAll('.featured-post-check:checked').length;
+          checkboxes.forEach(cb => {
+            if (!cb.checked) {
+              cb.disabled = checkedCount >= 5;
+            }
+          });
+        };
+
+        checkboxes.forEach(cb => {
+          cb.onchange = updateCheckboxStates;
+        });
+
+        updateCheckboxStates();
+
+        document.getElementById('featuredPostsForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('saveFeaturedBtn');
+          btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+          const selectedIds = Array.from(document.querySelectorAll('.featured-post-check:checked')).map(cb => cb.value);
+
+          try {
+            await updateSection(sectionId, { featured_posts: selectedIds });
+            showToast('تم حفظ المقالات المختارة للرئيسية بنجاح');
+            closeModal();
+            renderSectionsView();
+          } catch (err) {
+            showToast(err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'حفظ التحديد';
+          }
+        };
+
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
 
     function renderSectionModal(sec = null) {
       const isEdit = !!sec;

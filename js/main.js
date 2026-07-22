@@ -9,7 +9,7 @@ import { readingTime } from './posts.js?v=3.1';
 
 // ---- Utility: Eastern Arabic numerals ----
 function toArabicNumerals(str) {
-  return String(str).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  return String(str);
 }
 
 // ---- Arabic Gregorian month names (Algerian/Maghrebi style) ----
@@ -41,9 +41,13 @@ function formatHijriDate() {
     }).formatToParts(d);
     let result = '';
     parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
-    return result.trim() + ' هـ';
+    const easternToWestern = {
+      '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+      '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+    };
+    return result.trim().replace(/[٠-٩]/g, match => easternToWestern[match]) + ' هـ';
   } catch (e) {
-    return '٢٤ محرم ١٤٤٨ هـ';
+    return '24 محرم 1448 هـ';
   }
 }
 
@@ -140,6 +144,11 @@ export async function renderHeader() {
       <!-- Utility bar at top for auth buttons -->
       <div class="utility-top-bar">
         <div class="container utility-inner">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="القائمة">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
           <div class="utility-actions">
             ${userActionsHTML}
           </div>
@@ -154,7 +163,6 @@ export async function renderHeader() {
           <ul class="nav-links-broadsheet" id="navLinks">
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
-            <li><a href="weekly.html" ${currentPage === 'weekly.html' ? 'class="active"' : ''}>العدد الأسبوعي</a></li>
             <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
         </div>
@@ -173,7 +181,6 @@ export async function renderHeader() {
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
         ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
-        <li><a href="weekly.html">العدد الأسبوعي</a></li>
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">

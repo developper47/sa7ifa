@@ -1799,3 +1799,9 @@
 
 /* ---- Remove old "home-masthead-rule" bar if it sneaks in ---- */
 .home-masthead-rule { display: none; }
+
+@media (max-width: 900px) {
+  .utility-inner {
+    justify-content: space-between !important;
+  }
+}

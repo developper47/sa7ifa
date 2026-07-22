@@ -208,7 +208,7 @@ const GREGORIAN_MONTHS_AR = [
   'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
 ];
 function toArabicNumerals(str) {
-  return String(str).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  return String(str);
 }
 export function formatDate(dateString) {
   if (!dateString) return '';
