@@ -47,8 +47,26 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="artImage">رابط صورة المقال</label>
-              <input type="url" class="form-control" id="artImage" placeholder="https://images.unsplash.com/photo-..." required>
+              <label class="form-label">صورة المقال</label>
+              <div style="display:flex; gap:1.5rem; margin-bottom:0.6rem; font-size:0.9rem;">
+                <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                  <input type="radio" name="imageSource" id="imgSourceLink" checked style="cursor:pointer;"> رابط خارجي
+                </label>
+                <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                  <input type="radio" name="imageSource" id="imgSourceUpload" style="cursor:pointer;"> تحميل ملف
+                </label>
+              </div>
+              
+              <div id="imgLinkContainer">
+                <input type="url" class="form-control" id="artImage" placeholder="https://images.unsplash.com/photo-..." required>
+              </div>
+              <div id="imgUploadContainer" style="display:none;">
+                <input type="file" class="form-control" id="artImageFile" accept="image/*">
+              </div>
+
+              <div id="imagePreview" style="margin-top:0.5rem; border:1px dashed #ddd; border-radius:8px; height:120px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8f9fa;">
+                <span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -57,8 +75,50 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="artBody">محتوى المقال (يدعم HTML)</label>
-              <textarea class="form-control" id="artBody" style="min-height:250px;" placeholder="ابدأ بكتابة أفكارك هنا..." required></textarea>
+              <label class="form-label">محتوى المقال</label>
+              
+              <div class="rte-container">
+                <div class="rte-toolbar">
+                  <!-- Bold -->
+                  <button type="button" class="rte-btn" data-command="bold" title="خط عريض" style="font-weight:bold;">B</button>
+                  
+                  <!-- Font Size -->
+                  <select class="rte-select" data-command="fontSize" title="حجم الخط">
+                    <option value="">حجم الخط</option>
+                    <option value="3">عادي</option>
+                    <option value="4">متوسط</option>
+                    <option value="5">كبير</option>
+                    <option value="6">كبير جداً</option>
+                    <option value="7">ضخم</option>
+                  </select>
+
+                  <!-- Color -->
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:0.8rem; color:#666;">اللون:</span>
+                    <input type="color" class="rte-color" data-command="foreColor" value="#2b2b2b" title="لون الخط" style="width: 32px; height: 28px; padding:0; border:1px solid #ccc; border-radius:4px; cursor:pointer;">
+                  </div>
+
+                  <!-- Ordered List -->
+                  <button type="button" class="rte-btn" data-command="insertOrderedList" title="قائمة مرقمة">1. قائمة مرقمة</button>
+
+                  <!-- Headings -->
+                  <select class="rte-select" data-command="heading" title="تنسيق العناوين">
+                    <option value="">تنسيق العناوين</option>
+                    <option value="H2">عنوان رئيسي (H2)</option>
+                    <option value="H3">عنوان فرعي (H3)</option>
+                    <option value="H4">عنوان جانبي (H4)</option>
+                    <option value="P">فقرة عادية</option>
+                  </select>
+
+                  <!-- Heading Auto-Numbering -->
+                  <button type="button" class="rte-btn" id="btnNumberHeadings" title="ترقيم العناوين تلقائياً">🔢 ترقيم العناوين</button>
+                </div>
+                
+                <div class="rte-editor" id="artBodyEditor" contenteditable="true">
+                  <p><br></p>
+                </div>
+              </div>
+              <textarea id="artBody" style="display:none;"></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary" id="submitBtn">حفظ ونشر المراجعة</button>
@@ -90,6 +150,23 @@
 
     renderHeader();
 
+    // Inject RTE CSS styles
+    if (!document.getElementById('rte-styles')) {
+      const style = document.createElement('style');
+      style.id = 'rte-styles';
+      style.innerHTML = `
+        .rte-container { border: 1.5px solid #eee; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 1.5rem; }
+        .rte-toolbar { background: #f8f9fa; border-bottom: 1.5px solid #eee; padding: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .rte-btn { border: 1.5px solid #dfe6e9 !important; background: #ffffff !important; color: #2d3436 !important; border-radius: 6px !important; padding: 5px 10px !important; font-size: 0.9rem !important; cursor: pointer !important; transition: all 0.2s !important; display: inline-flex !important; align-items: center; gap: 4px; }
+        .rte-btn:hover { background: #f1f2f6 !important; border-color: #b2bec3 !important; }
+        .rte-select { border: 1.5px solid #dfe6e9 !important; background: #ffffff !important; color: #2d3436 !important; border-radius: 6px !important; padding: 5px !important; font-size: 0.9rem !important; cursor: pointer !important; }
+        .rte-editor { min-height: 250px; max-height: 500px; overflow-y: auto; padding: 1.2rem; border: none; outline: none; background: #fff; font-family: 'Noto Naskh Arabic', serif !important; font-size: 1.1rem; line-height: 1.8; color: #2b2b2b; text-align: right; }
+        .rte-editor h2, .rte-editor h3, .rte-editor h4 { font-family: 'Amiri', serif !important; color: #8b1a1a; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .rte-editor p { margin-bottom: 1rem; }
+      `;
+      document.head.appendChild(style);
+    }
+
     const user = await getCurrentUser();
     const isAdminUser = isAdmin(user);
     const authCheck = document.getElementById('authCheck');
@@ -109,6 +186,131 @@
       toast.textContent = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Image selector handlers
+    const imgLinkRadio = document.getElementById('imgSourceLink');
+    const imgUploadRadio = document.getElementById('imgSourceUpload');
+    const imgLinkContainer = document.getElementById('imgLinkContainer');
+    const imgUploadContainer = document.getElementById('imgUploadContainer');
+    const imgInput = document.getElementById('artImage');
+    const imgFileInput = document.getElementById('artImageFile');
+    const imgPreview = document.getElementById('imagePreview');
+
+    if (imgLinkRadio) {
+      imgLinkRadio.onchange = () => {
+        imgLinkContainer.style.display = 'block';
+        imgUploadContainer.style.display = 'none';
+        imgInput.required = true;
+      };
+      imgUploadRadio.onchange = () => {
+        imgLinkContainer.style.display = 'none';
+        imgUploadContainer.style.display = 'block';
+        imgInput.required = false;
+      };
+
+      imgInput.oninput = () => {
+        const url = imgInput.value.trim();
+        if (url) {
+          imgPreview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+          imgPreview.innerHTML = '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>';
+        }
+      };
+
+      imgFileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const dataUrl = event.target.result;
+            imgInput.value = dataUrl;
+            imgPreview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+    }
+
+    // WYSIWYG command handlers
+    const editor = document.getElementById('artBodyEditor');
+    const toolbar = document.querySelector('.rte-toolbar');
+
+    if (toolbar && editor) {
+      toolbar.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-command]');
+        if (!btn) return;
+        const cmd = btn.dataset.command;
+        
+        e.preventDefault();
+        if (cmd === 'bold' || cmd === 'insertOrderedList') {
+          document.execCommand(cmd, false, null);
+        }
+        editor.focus();
+      });
+
+      const fontSelect = toolbar.querySelector('select[data-command="fontSize"]');
+      fontSelect.onchange = () => {
+        const val = fontSelect.value;
+        if (val) {
+          document.execCommand('fontSize', false, val);
+        }
+        fontSelect.value = '';
+        editor.focus();
+      };
+
+      const colorInput = toolbar.querySelector('input[data-command="foreColor"]');
+      colorInput.onchange = () => {
+        const val = colorInput.value;
+        if (val) {
+          document.execCommand('foreColor', false, val);
+        }
+        editor.focus();
+      };
+
+      const headingSelect = toolbar.querySelector('select[data-command="heading"]');
+      headingSelect.onchange = () => {
+        const val = headingSelect.value;
+        if (val) {
+          if (val === 'P') {
+            document.execCommand('formatBlock', false, '<p>');
+          } else {
+            document.execCommand('formatBlock', false, '<' + val + '>');
+          }
+        }
+        headingSelect.value = '';
+        editor.focus();
+      };
+
+      const numberHeadingsBtn = document.getElementById('btnNumberHeadings');
+      numberHeadingsBtn.onclick = (e) => {
+        e.preventDefault();
+        
+        const headings = editor.querySelectorAll('h2, h3, h4');
+        let h2Count = 0;
+        let h3Count = 0;
+        let h4Count = 0;
+        
+        headings.forEach(heading => {
+          let text = heading.innerHTML.replace(/^\d+(\.\d+)*\.?\s+/, '');
+          const tag = heading.tagName.toLowerCase();
+          
+          if (tag === 'h2') {
+            h2Count++;
+            h3Count = 0;
+            h4Count = 0;
+            heading.innerHTML = `${h2Count}. ${text}`;
+          } else if (tag === 'h3') {
+            h3Count++;
+            h4Count = 0;
+            heading.innerHTML = `${h2Count}.${h3Count}. ${text}`;
+          } else if (tag === 'h4') {
+            h4Count++;
+            heading.innerHTML = `${h2Count}.${h3Count}.${h4Count}. ${text}`;
+          }
+        });
+        editor.focus();
+      };
     }
 
     if (!user) {
@@ -154,9 +356,9 @@
             title: document.getElementById('artTitle').value,
             category: document.getElementById('artCategory').value,
             tags: tags,
-            image: document.getElementById('artImage').value,
+            image: imgInput.value,
             excerpt: document.getElementById('artExcerpt').value,
-            body: document.getElementById('artBody').value,
+            body: editor.innerHTML,
             author_id: user.id,
             author_name: user.name,
             status: isAdminUser ? 'published' : 'pending' 
@@ -183,6 +385,14 @@
         document.getElementById('artId').value = '';
         submitBtn.textContent = 'حفظ ونشر المراجعة';
         cancelEdit.style.display = 'none';
+        if (editor) editor.innerHTML = '<p><br></p>';
+        if (imgPreview) imgPreview.innerHTML = '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>';
+        if (imgLinkRadio) {
+          imgLinkRadio.checked = true;
+          imgLinkContainer.style.display = 'block';
+          imgUploadContainer.style.display = 'none';
+          imgInput.required = true;
+        }
         writeSection.scrollIntoView({ behavior: 'smooth' });
       }
 
@@ -251,9 +461,22 @@
                   document.getElementById('artTitle').value = art.title;
                   document.getElementById('artCategory').value = art.category;
                   document.getElementById('artTags').value = (art.tags || []).join(', ');
-                  document.getElementById('artImage').value = art.image;
-                  document.getElementById('artExcerpt').value = art.excerpt;
-                  document.getElementById('artBody').value = art.body;
+                  imgInput.value = art.image || '';
+                  document.getElementById('artExcerpt').value = art.excerpt || '';
+                  if (editor) editor.innerHTML = art.body || '<p><br></p>';
+                  
+                  if (art.image && art.image.startsWith('data:image')) {
+                    imgUploadRadio.checked = true;
+                    imgLinkContainer.style.display = 'none';
+                    imgUploadContainer.style.display = 'block';
+                    imgInput.required = false;
+                  } else {
+                    imgLinkRadio.checked = true;
+                    imgLinkContainer.style.display = 'block';
+                    imgUploadContainer.style.display = 'none';
+                    imgInput.required = true;
+                  }
+                  imgPreview.innerHTML = art.image ? `<img src="${art.image}" style="width:100%;height:100%;object-fit:cover;">` : '<span style="font-size:0.8rem;color:#999;">معاينة الصورة ستظهر هنا</span>';
                   
                   submitBtn.textContent = 'تحديث المقال';
                   cancelEdit.style.display = 'inline-block';

@@ -261,7 +261,7 @@
 
     /* ── Helpers ───────────────────────────────────────── */
     const MONTHS = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    const toAr = s => String(s).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+    const toAr = s => String(s);
     const fmtDate = d => { if (!d) return ''; const dt = new Date(d); return `${toAr(dt.getDate())} ${MONTHS[dt.getMonth()]} ${toAr(dt.getFullYear())}`; };
     const FALLBACK = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
     let ALL_POSTS = [];
@@ -356,7 +356,7 @@
         return clean.substring(0, targetLen) + '...';
       };
 
-      const excerpt0 = getExcerpt(p0, 1100, 1300);
+      const excerpt0 = getExcerpt(p0, 1800, 2200);
       const excerpt1 = getExcerpt(p1, 350, 420);
       const excerpt2 = getExcerpt(p2, 600, 700);
       const excerpt3 = getExcerpt(p3, 400, 450);
@@ -379,7 +379,7 @@
               <div class="masthead-col masthead-col-right headline-font text-right" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
                 <span>مرحبا بك</span>
                 <span>جريدة مستقلة للفكر الحر</span>
-                <span>تأسست عام ٢٠٢٦ م</span>
+                <span>تأسست عام 2026 م</span>
               </div>
               
               <!-- Center Newspaper Title -->
@@ -401,8 +401,8 @@
           <div class="grid-3-col">
             
             <!-- COLUMN 1: RIGHT COLUMN (Article 1 - Main Feature) -->
-            <section class="col-divider-left" style="display: flex; flex-direction: column; justify-content: space-between;">
-              <article class="h-full" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <section class="col-divider-left">
+              <article>
                 <div>
                   <div class="cairo-font red-800 mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: ${accentColor}">${section.name_ar} اليوم</div>
                   <h2 class="headline-font mb-3" style="font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 0 0 0.75rem 0;">
@@ -410,13 +410,13 @@
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p0.author_name || 'المحرر'}</div>
                   
-                  <div class="text-sm text-justify" style="line-height: 1.6;">
+                  <div class="text-sm text-justify" style="line-height: 1.6; margin-bottom: 1rem;">
                     <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="vintage-image" style="width: 160px; height: 160px; float: left; margin: 8px; object-fit: cover;">
-                    <p>${excerpt0}</p>
+                    <p>
+                      ${excerpt0}
+                      <button class="read-more-btn headline-font na-open-modal" style="display: inline-block; margin-right: 5px; padding: 2px 6px; font-size: 0.75rem;" data-post-id="${p0.id}">إقرأ المزيد</button>
+                    </p>
                   </div>
-                </div>
-                <div class="mt-4 pt-3 border-dashed-top text-left">
-                  <button class="read-more-btn headline-font na-open-modal" data-post-id="${p0.id}">إقرأ المزيد</button>
                 </div>
               </article>
             </section>
@@ -519,7 +519,7 @@
           
           <!-- Footer Line -->
           <footer class="mt-6 pt-4 border-t-double text-center text-xs opacity-75 headline-font">
-            <p>© ٢٠٢٦ الصحيفة. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
+            <p>© 2026 الصحيفة. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
           </footer>
 
         </div>
@@ -650,7 +650,17 @@
       let slideIndex = 0;
 
             for (const section of sections) {
-        let posts = allPosts.filter(p => p.section_id === section.id).slice(0, 5);
+        let posts = [];
+        if (section.featured_posts && Array.isArray(section.featured_posts)) {
+          const secPosts = allPosts.filter(p => p.section_id === section.id);
+          posts = section.featured_posts
+            .map(id => secPosts.find(p => p.id === id))
+            .filter(p => !!p);
+        }
+        if (posts.length < 5) {
+          const remaining = allPosts.filter(p => p.section_id === section.id && !posts.some(fp => fp.id === p.id));
+          posts = [...posts, ...remaining].slice(0, 5);
+        }
         
         // Pad with placeholder articles to ensure no blank spaces and exactly 5 articles containing images
         while (posts.length < 5) {
