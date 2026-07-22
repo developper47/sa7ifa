@@ -303,7 +303,7 @@ export async function renderFooter() {
         <div class="footer-grid">
           <div class="footer-col footer-brand">
             <div class="footer-logo">
-              <span style="font-family: var(--font-serif); font-size: 2rem; color: var(--paper);">الصحيفة</span>
+              <img src="LOGO.png" alt="الصحيفة" class="footer-logo-img" style="height: 40px; object-fit: contain;">
             </div>
             <p class="footer-tagline">منصة عربية مستقلة تُعنى بالتحليل الفكري والاقتصادي والاجتماعي.</p>
           </div>

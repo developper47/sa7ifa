@@ -15,8 +15,6 @@
     /* ── Body override for slider mode ─────────────────── */
     body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
     .site-header { flex-shrink: 0; }
-    /* Hide the large logo masthead on homepage slider to avoid duplication and save vertical space */
-    .site-header #mastheadMain { display: none; }
     .nws-slider { flex: 1; min-height: 0; }
     
     /* ── Custom Newspaper Layout Overrides ── */
@@ -318,7 +316,32 @@
     */
     function tplNewspaper(posts, section) {
       const [p0, p1, p2, p3, p4] = posts;
-      const todayDate = fmtDate(new Date());
+
+      const getWesternDates = () => {
+        const MONTHS_WESTERN = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        const d = new Date();
+        const gregDay = d.getDate();
+        const gregMonth = MONTHS_WESTERN[d.getMonth()];
+        const gregYear = d.getFullYear();
+        const gregStr = `${gregDay} ${gregMonth} ${gregYear}`;
+        
+        let hijriStr = '';
+        try {
+          const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+            day: '2-digit', month: 'long', year: 'numeric'
+          }).formatToParts(d);
+          let result = '';
+          parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
+          const easternToWestern = {
+            '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+            '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+          };
+          hijriStr = result.trim().replace(/[٠-٩]/g, match => easternToWestern[match]);
+        } catch (e) {
+          hijriStr = '07 صفر 1448';
+        }
+        return `(${gregStr} و ${hijriStr})`;
+      };
 
       // Helper to strip HTML tags for preview/excerpts
       const stripHtml = html => (html || '').replace(/<[^>]+>/g, '').trim();
@@ -331,14 +354,14 @@
         return clean.substring(0, targetLen) + '...';
       };
 
-      const excerpt0 = getExcerpt(p0, 600, 650);
-      const excerpt1 = getExcerpt(p1, 280, 320);
-      const excerpt2 = getExcerpt(p2, 500, 550);
-      const excerpt3 = getExcerpt(p3, 300, 350);
+      const excerpt0 = getExcerpt(p0, 1100, 1300);
+      const excerpt1 = getExcerpt(p1, 350, 420);
+      const excerpt2 = getExcerpt(p2, 600, 700);
+      const excerpt3 = getExcerpt(p3, 400, 450);
       
-      const totalExcerpt4 = getExcerpt(p4, 350, 400);
-      const part1 = totalExcerpt4.substring(0, 250);
-      const part2 = totalExcerpt4.substring(250);
+      const totalExcerpt4 = getExcerpt(p4, 550, 650);
+      const part1 = totalExcerpt4.substring(0, 300);
+      const part2 = totalExcerpt4.substring(300);
 
       const accentColor = section.color || '#2B2B2B';
 
@@ -353,21 +376,20 @@
               <!-- Right Metadata Box -->
               <div class="masthead-col masthead-col-right">
                 <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">قسم ${section.name_ar}</span>
-                <span class="block text-xs opacity-85 mt-2">تأسست في عام ٢٠٢٦ م ◈ جريدة وطنية مستقلة</span>
+                <span class="block text-xs opacity-85 mt-2">تأسست في عام ٢٠٢٦ م ◈ جريدة مستقلة</span>
               </div>
               
               <!-- Center Newspaper Title -->
-              <div class="masthead-col text-center" style="display: flex; flex-direction: column; align-items: center;">
-                <h1 class="text-4xl md:text-6xl font-black headline-font text-center" style="font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1;">
-                  <a href="index.html" class="hover:text-red-900 transition-colors" style="text-decoration: none; color: inherit;">الأخبار الأسبوعية</a>
-                </h1>
+              <div class="masthead-col text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <a href="index.html" class="hover:text-red-900 transition-colors block" style="text-decoration: none; color: inherit;">
+                  <img src="LOGO.png" alt="الصحيفة" style="height: 60px; margin: 0 auto; max-width: 100%; object-fit: contain; display: block;">
+                </a>
                 <span class="text-xs font-semibold cairo-font tracking-widest mt-2 opacity-80 block">اتجاه القراءة من اليمين إلى اليسار (RTL)</span>
               </div>
               
               <!-- Left Metadata Box -->
-              <div class="masthead-col masthead-col-left">
-                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">${todayDate}</span>
-                <span class="block text-xs opacity-85 mt-2">المجلد الأول ◈ العدد ٢٤ ◈ الثمن: قرشان</span>
+              <div class="masthead-col masthead-col-left" style="display: flex; align-items: center; justify-content: center;">
+                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">${getWesternDates()}</span>
               </div>
               
             </div>
@@ -388,7 +410,7 @@
                   
                   <div class="text-sm text-justify" style="line-height: 1.6;">
                     <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="vintage-image" style="width: 160px; height: 160px; float: left; margin: 8px; object-fit: cover;">
-                    <p class="lettrine">${excerpt0}</p>
+                    <p>${excerpt0}</p>
                   </div>
                 </div>
                 <div class="mt-4 pt-3 border-dashed-top text-left">
@@ -495,7 +517,7 @@
           
           <!-- Footer Line -->
           <footer class="mt-6 pt-4 border-t-double text-center text-xs opacity-75 headline-font">
-            <p>© ٢٠٢٦ الأخبار الأسبوعية. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
+            <p>© ٢٠٢٦ الصحيفة. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
           </footer>
 
         </div>

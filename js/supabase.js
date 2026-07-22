@@ -564,23 +564,28 @@ const mockAuth = {
     const session = localStorage.getItem(MOCK_SESSION_KEY);
     if (!session) return { data: { user: null }, error: new Error('No active session') };
     const user = JSON.parse(session);
-    if (data?.full_name) {
-      user.user_metadata = { ...user.user_metadata, full_name: data.full_name };
-      
-      const users = JSON.parse(localStorage.getItem('sa7ifa_users')) || [];
-      const idx = users.findIndex(u => u.id === user.id);
-      if (idx !== -1) {
+    
+    const users = JSON.parse(localStorage.getItem('sa7ifa_users')) || [];
+    const idx = users.findIndex(u => u.id === user.id);
+    
+    if (idx !== -1) {
+      if (data?.full_name) {
+        user.user_metadata = { ...user.user_metadata, full_name: data.full_name };
         users[idx].user_metadata = user.user_metadata;
-        if (password) users[idx].password = password;
-        localStorage.setItem('sa7ifa_users', JSON.stringify(users));
+        
+        const profiles = JSON.parse(localStorage.getItem('sa7ifa_db_profiles')) || [];
+        const pIdx = profiles.findIndex(p => p.id === user.id);
+        if (pIdx !== -1) {
+          profiles[pIdx].name = data.full_name;
+          localStorage.setItem('sa7ifa_db_profiles', JSON.stringify(profiles));
+        }
       }
       
-      const profiles = JSON.parse(localStorage.getItem('sa7ifa_db_profiles')) || [];
-      const pIdx = profiles.findIndex(p => p.id === user.id);
-      if (pIdx !== -1) {
-        profiles[pIdx].name = data.full_name;
-        localStorage.setItem('sa7ifa_db_profiles', JSON.stringify(profiles));
+      if (password) {
+        users[idx].password = password;
       }
+      
+      localStorage.setItem('sa7ifa_users', JSON.stringify(users));
       localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(user));
     }
     return { data: { user }, error: null };
