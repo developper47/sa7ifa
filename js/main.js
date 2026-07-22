@@ -146,31 +146,6 @@ export async function renderHeader() {
         </div>
       </div>
 
-      <!-- Main majestic broadsheet masthead -->
-      <div class="masthead-main" id="mastheadMain">
-        <div class="container masthead-grid">
-          <!-- Right Column Metadata -->
-          <div class="masthead-meta-box masthead-meta-box--right">
-            <div class="meta-item">مرحبا بك</div>
-            <div class="meta-item">جريدة مستقلة للفكر الحر</div>
-            <div class="meta-item">تأسست عام ${toArabicNumerals(2026)} م</div>
-          </div>
-
-          <!-- Center Logo -->
-          <a href="index.html" class="masthead-logo-container">
-            <h1 class="broadsheet-logo-title">الصحيفة</h1>
-            <span class="logo-subtitle">منبر الكلمة الحرة والفكر المستنير</span>
-          </a>
-
-          <!-- Left Column Metadata -->
-          <div class="masthead-meta-box masthead-meta-box--left">
-            <div class="meta-item">${today}</div>
-            <div class="meta-item">${hijriDate}</div>
-            <div class="meta-item">العدد الأول • إصدار تجريبي</div>
-          </div>
-        </div>
-      </div>
-
       <div class="broadsheet-double-line"></div>
 
       <!-- Broadsheet Parallel Line Navigation -->
@@ -219,10 +194,10 @@ export async function renderHeader() {
   window.addEventListener('scroll', () => {
     if (window.scrollY > 80) {
       header.classList.add('header--scrolled');
-      masthead.classList.add('masthead--compact');
+      if (masthead) masthead.classList.add('masthead--compact');
     } else {
       header.classList.remove('header--scrolled');
-      masthead.classList.remove('masthead--compact');
+      if (masthead) masthead.classList.remove('masthead--compact');
     }
   }, { passive: true });
 
