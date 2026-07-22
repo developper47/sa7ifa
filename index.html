@@ -13,9 +13,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     /* ── Body override for slider mode ─────────────────── */
-    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    body { overflow-x: hidden; overflow-y: auto; min-height: 100vh; display: flex; flex-direction: column; }
     .site-header { flex-shrink: 0; }
-    .nws-slider { flex: 1; min-height: 0; }
+    .nws-slider { height: 85vh; min-height: 600px; flex-shrink: 0; }
     
     /* ── Custom Newspaper Layout Overrides ── */
     .nws-page {
@@ -255,7 +255,7 @@
   </div>
 
   <script type="module">
-    import { renderHeader } from './js/main.js?v=3.4';
+    import { renderHeader, renderFooter } from './js/main.js?v=3.4';
     import { getPosts } from './js/posts.js?v=3.4';
     import { getSections } from './js/sections.js?v=3.4';
 
@@ -318,17 +318,19 @@
       const [p0, p1, p2, p3, p4] = posts;
 
       const getWesternDates = () => {
+        const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const MONTHS_WESTERN = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
         const d = new Date();
+        const dayName = DAYS_AR[d.getDay()];
         const gregDay = d.getDate();
         const gregMonth = MONTHS_WESTERN[d.getMonth()];
         const gregYear = d.getFullYear();
-        const gregStr = `${gregDay} ${gregMonth} ${gregYear}`;
+        const gregStr = `${dayName}، ${gregDay} ${gregMonth} ${gregYear}`;
         
         let hijriStr = '';
         try {
           const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
-            day: '2-digit', month: 'long', year: 'numeric'
+            day: 'numeric', month: 'long', year: 'numeric'
           }).formatToParts(d);
           let result = '';
           parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
@@ -338,9 +340,9 @@
           };
           hijriStr = result.trim().replace(/[٠-٩]/g, match => easternToWestern[match]);
         } catch (e) {
-          hijriStr = '07 صفر 1448';
+          hijriStr = '8 صفر 1448';
         }
-        return `(${gregStr} و ${hijriStr})`;
+        return `${gregStr}<br>${hijriStr} هـ هـ<br>العدد الأول •`;
       };
 
       // Helper to strip HTML tags for preview/excerpts
@@ -374,9 +376,10 @@
             <div class="flex-row-md py-4 border-b-double">
               
               <!-- Right Metadata Box -->
-              <div class="masthead-col masthead-col-right">
-                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">قسم ${section.name_ar}</span>
-                <span class="block text-xs opacity-85 mt-2">تأسست في عام ٢٠٢٦ م ◈ جريدة مستقلة</span>
+              <div class="masthead-col masthead-col-right headline-font text-right" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
+                <span>مرحبا بك</span>
+                <span>جريدة مستقلة للفكر الحر</span>
+                <span>تأسست عام ٢٠٢٦ م</span>
               </div>
               
               <!-- Center Newspaper Title -->
@@ -384,12 +387,11 @@
                 <a href="index.html" class="hover:text-red-900 transition-colors block" style="text-decoration: none; color: inherit;">
                   <img src="LOGO.png" alt="الصحيفة" style="height: 60px; margin: 0 auto; max-width: 100%; object-fit: contain; display: block;">
                 </a>
-                <span class="text-xs font-semibold cairo-font tracking-widest mt-2 opacity-80 block">اتجاه القراءة من اليمين إلى اليسار (RTL)</span>
               </div>
               
               <!-- Left Metadata Box -->
-              <div class="masthead-col masthead-col-left" style="display: flex; align-items: center; justify-content: center;">
-                <span class="text-sm font-bold headline-font red-800" style="color: ${accentColor}">${getWesternDates()}</span>
+              <div class="masthead-col masthead-col-left headline-font text-left" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
+                <span>${getWesternDates()}</span>
               </div>
               
             </div>
@@ -629,12 +631,13 @@
       const modal = document.getElementById('nwsModal');
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = '';
     }
 
     /* ── Main init ──────────────────────────────────────── */
     (async () => {
       await renderHeader();
+      renderFooter();
 
       const [allPosts, sections] = await Promise.all([
         getPosts({ status: 'published', limit: 80 }),
