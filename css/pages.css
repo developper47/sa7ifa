@@ -1804,4 +1804,13 @@
   .utility-inner {
     justify-content: space-between !important;
   }
+  .nav-links-broadsheet {
+    display: none !important;
+  }
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+  .main-nav-container {
+    padding: 0 1rem;
+  }
 }

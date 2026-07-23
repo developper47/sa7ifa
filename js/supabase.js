@@ -5,6 +5,19 @@
 
 const SECTIONS_SEED = [
   {
+    id: "home",
+    name_ar: "الصفحة الرئيسية",
+    name_en: "Home",
+    slug: "home",
+    description: "الصفحة الرئيسية للجريدة",
+    icon: "📰",
+    color: "#8b1a1a",
+    display_order: 0,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
     id: "s1",
     name_ar: "فكر",
     name_en: "Ideas",
@@ -253,7 +266,7 @@ class SupabaseQueryBuilder {
   }
 
   async execute() {
-    const SEED_VERSION = 'v3'; // bump this when POSTS_SEED or SECTIONS_SEED change
+    const SEED_VERSION = 'v4'; // bump this when POSTS_SEED or SECTIONS_SEED change
     const storedVersion = localStorage.getItem('sa7ifa_seed_version');
 
     // Re-seed if version mismatch (preserving user-created posts)
@@ -268,6 +281,29 @@ class SupabaseQueryBuilder {
       localStorage.setItem('sa7ifa_db_posts', JSON.stringify([...POSTS_SEED, ...userPosts]));
       localStorage.setItem('sa7ifa_db_site_settings', JSON.stringify(SETTINGS_SEED));
       localStorage.setItem('sa7ifa_seed_version', SEED_VERSION);
+    }
+
+    // Self-healing migration for existing databases to ensure "home" section exists
+    try {
+      let currentSections = JSON.parse(localStorage.getItem('sa7ifa_db_sections')) || [];
+      if (currentSections.length > 0 && !currentSections.some(s => s.slug === 'home')) {
+        currentSections.unshift({
+          id: "home",
+          name_ar: "الصفحة الرئيسية",
+          name_en: "Home",
+          slug: "home",
+          description: "الصفحة الرئيسية للجريدة",
+          icon: "📰",
+          color: "#8b1a1a",
+          display_order: 0,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        localStorage.setItem('sa7ifa_db_sections', JSON.stringify(currentSections));
+      }
+    } catch (e) {
+      console.error(e);
     }
 
     let data = JSON.parse(localStorage.getItem(`sa7ifa_db_${this.table}`));

@@ -47,20 +47,31 @@
   height: auto;
   width: 100%;
   max-width: 1000px;         /* Rectangular proportions resembling a broadsheet */
-  background: #F4F1EA;
-  background-image:
+  background-color: #F1ECE1;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.05) 100%),
     repeating-linear-gradient(
-      transparent 0px, transparent 26px,
-      rgba(43,43,43,0.03) 26px, rgba(43,43,43,0.03) 27px
+      0deg,
+      rgba(165,145,115,0.04),
+      rgba(165,145,115,0.04) 1px,
+      transparent 1px,
+      transparent 24px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(165,145,115,0.04),
+      rgba(165,145,115,0.04) 1px,
+      transparent 1px,
+      transparent 24px
     );
-  border: 3px double #2B2B2B;  /* Thinner border (from 6px to 3px) */
+  border: 2px dashed #8B7E74;
   margin: 0;
   overflow: visible;         /* Scroll outside */
   position: relative;
   box-sizing: border-box;
   padding: 0 1rem 1.5rem;     /* Reduced padding on left/right and bottom */
   /* Paper drop shadow and internal ink glow */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 0 80px rgba(43,43,43,0.05);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12), inset 0 0 120px rgba(110,85,60,0.15);
 }
 
 @media (max-width: 767px) {
@@ -75,9 +86,9 @@
 
 /* ── Section band (top strip per slide) ─────────────────── */
 .nws-band {
-  border-top: 3px double #2B2B2B;
-  border-bottom: 3px double #2B2B2B;
-  background: #F4F1EA;
+  border-top: 1.5px dashed #8B7E74;
+  border-bottom: 1.5px dashed #8B7E74;
+  background: #F1ECE1;
   padding: 0.4rem 1.25rem;
   flex-shrink: 0;
   position: relative; /* Changed from sticky to relative so it scrolls with the page */
@@ -844,8 +855,8 @@
 /* ── Divider lines ── */
 .news-row-divider {
   height: 4px;
-  border-top: 1px solid #2B2B2B;
-  border-bottom: 1px solid #2B2B2B;
+  border-top: 1px dashed #8B7E74;
+  border-bottom: 1px dashed #8B7E74;
   margin: 2rem 0;
 }
 
@@ -860,7 +871,7 @@
   flex-direction: column;
 }
 .news-mid-right {
-  border-left: 1px solid rgba(43,43,43,0.2);
+  border-left: 1px dashed rgba(139,126,116,0.5);
   padding-left: 1.5rem;
 }
 .col-section-header {
@@ -972,7 +983,7 @@
   flex-direction: column;
 }
 .news-bot-left {
-  border-right: 1px solid rgba(43,43,43,0.2);
+  border-right: 1px dashed rgba(139,126,116,0.5);
   padding-right: 1.5rem;
 }
 .news-bot-right {
