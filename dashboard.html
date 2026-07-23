@@ -779,8 +779,10 @@
                 </div>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                   <button class="btn btn-outline manage-featured" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--dash-accent); border-color:var(--dash-accent);">🔍 مقالات الرئيسية</button>
-                  <button class="btn btn-outline edit-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem;">تعديل</button>
-                  <button class="btn btn-outline del-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--accent);">حذف</button>
+                  ${s.slug !== 'home' ? `
+                    <button class="btn btn-outline edit-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem;">تعديل</button>
+                    <button class="btn btn-outline del-sec" data-id="${s.id}" style="padding:0.3rem 0.7rem; font-size:0.8rem; color:var(--accent);">حذف</button>
+                  ` : ''}
                 </div>
               </div>
             `).join('')}
@@ -814,7 +816,7 @@
         const sec = sections.find(s => s.id === sectionId);
         if (!sec) throw new Error('القسم غير موجود');
 
-        const secPosts = posts.filter(p => p.section_id === sectionId);
+        const secPosts = sec.slug === 'home' ? posts : posts.filter(p => p.section_id === sectionId);
         const currentFeatured = sec.featured_posts || [];
 
         let html = `

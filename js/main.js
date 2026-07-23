@@ -100,7 +100,7 @@ export async function renderHeader() {
 
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
-  const sectionLinks = sections.map(s => {
+  const sectionLinks = sections.filter(s => s.slug !== 'home').map(s => {
     const href = `category.html?section=${s.slug}`;
     const isActive = currentPage === 'category.html' &&
       new URLSearchParams(window.location.search).get('section') === s.slug ? 'active' : '';
@@ -141,30 +141,26 @@ export async function renderHeader() {
 
   const headerHTML = `
     <header class="site-header" id="siteHeader">
-      <!-- Utility bar at top for auth buttons -->
-      <div class="utility-top-bar">
-        <div class="container utility-inner">
-          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="القائمة">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-          <div class="utility-actions">
-            ${userActionsHTML}
-          </div>
-        </div>
-      </div>
-
-      <div class="broadsheet-double-line"></div>
+      <div class="broadsheet-double-line" style="margin-top: 0.5rem;"></div>
 
       <!-- Broadsheet Parallel Line Navigation -->
       <nav class="main-nav-broadsheet">
-        <div class="container">
-          <ul class="nav-links-broadsheet" id="navLinks">
+        <div class="container main-nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="القائمة" style="display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px;">
+            <span style="background: #2b2b2b; display: block; width: 24px; height: 2px; border-radius: 2px;"></span>
+            <span style="background: #2b2b2b; display: block; width: 24px; height: 2px; border-radius: 2px;"></span>
+            <span style="background: #2b2b2b; display: block; width: 24px; height: 2px; border-radius: 2px;"></span>
+          </button>
+          
+          <ul class="nav-links-broadsheet" id="navLinks" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; flex-grow: 1; justify-content: center;">
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
             <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
+
+          <div class="utility-actions" style="display: flex; gap: 1rem; align-items: center; margin-right: auto; margin-left: 0;">
+            ${userActionsHTML}
+          </div>
         </div>
       </nav>
 
@@ -180,7 +176,7 @@ export async function renderHeader() {
       </div>
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
-        ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
+        ${sections.filter(s => s.slug !== 'home').map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">
@@ -292,7 +288,7 @@ export async function renderFooter() {
           <div class="footer-col">
             <h4>الأقسام</h4>
             <ul>
-              ${sections.map(s => `<li><a href="category.html?section=${s.slug}">${s.name_ar}</a></li>`).join('')}
+              ${sections.filter(s => s.slug !== 'home').map(s => `<li><a href="category.html?section=${s.slug}">${s.name_ar}</a></li>`).join('')}
             </ul>
           </div>
           <div class="footer-col">
