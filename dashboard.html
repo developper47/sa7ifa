@@ -220,6 +220,9 @@
         <li class="nav-item">
           <a href="#moderate" class="nav-link" id="navModerate"><span>⚖️</span> <span>المراجعة</span></a>
         </li>
+        <li class="nav-item">
+          <a href="#settings" class="nav-link" id="navSettings"><span>⚙️</span> <span>إعدادات التسلية</span></a>
+        </li>
       </div>
     </ul>
 
@@ -1105,6 +1108,87 @@
       };
     }
 
+    async function renderSettingsView() {
+      viewTitle.textContent = 'إعدادات صفحة التسلية والمنوعات';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جاري تحميل الإعدادات...</strong></div>';
+      try {
+        const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
+        if (error) throw error;
+        const settings = data || {
+          weather_temp: "28",
+          weather_desc: "صحو دافئ مع رياح شرقية خفيفة",
+          exchange_rates: "الليرة الذهبية: 450 قرشاً | الريال المجيدي: 22 قرشاً | الجنيه الاسترليني: 110 قروش",
+          quote_text: "إن صحيفتنا هذه ليست مجرد ناقل للأخبار، بل هي منبر للأحرار وسجل لتاريخ الأمة الحقيقي.",
+          quote_author: "أديب إسحاق"
+        };
+
+        viewContainer.innerHTML = `
+          <form id="settingsForm" style="max-width: 600px;">
+            <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.2rem;">أحوال الطقس</h3>
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom: 1.5rem;">
+              <div class="form-group">
+                <label class="form-label">درجة الحرارة (°م)</label>
+                <input type="text" class="form-control" id="settTemp" value="${settings.weather_temp || ''}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">حالة الطقس العامة</label>
+                <input type="text" class="form-control" id="settDesc" value="${settings.weather_desc || ''}" required>
+              </div>
+            </div>
+
+            <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.2rem;">أسعار الصرف (العملات الكلاسيكية)</h3>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label">شريط العملات والصرف</label>
+              <textarea class="form-control" id="settRates" style="min-height:80px;" required>${settings.exchange_rates || ''}</textarea>
+              <small style="color:#666; font-size:0.8rem; display:block; margin-top:0.25rem;">افصل بين العملات برمز العمود العمودي |</small>
+            </div>
+
+            <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.2rem;">حكمة اليوم / مقولات خالدة</h3>
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label class="form-label">نص المقولة</label>
+              <textarea class="form-control" id="settQuote" style="min-height:80px;" required>${settings.quote_text || ''}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label">صاحب المقولة</label>
+              <input type="text" class="form-control" id="settAuthor" value="${settings.quote_author || ''}" required>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-top:2rem;">
+              <button type="submit" class="btn btn-primary" id="saveSettingsBtn">حفظ التغييرات</button>
+            </div>
+          </form>
+        `;
+
+        document.getElementById('settingsForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('saveSettingsBtn');
+          btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+          try {
+            const payload = {
+              weather_temp: document.getElementById('settTemp').value.trim(),
+              weather_desc: document.getElementById('settDesc').value.trim(),
+              exchange_rates: document.getElementById('settRates').value.trim(),
+              quote_text: document.getElementById('settQuote').value.trim(),
+              quote_author: document.getElementById('settAuthor').value.trim()
+            };
+
+            const { error: updErr } = await supabase.from('site_settings').update(payload).eq('id', 1);
+            if (updErr) throw updErr;
+
+            showToast('تم حفظ إعدادات التسلية بنجاح');
+          } catch (err) {
+            showToast(err.message, 'error');
+          } finally {
+            btn.disabled = false; btn.textContent = 'حفظ التغييرات';
+          }
+        };
+
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
     function renderPasswordView() {
       viewTitle.textContent = 'تغيير كلمة المرور';
       viewContainer.innerHTML = `
@@ -1164,6 +1248,12 @@
     
     document.getElementById('navModerate').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(true); };
     document.getElementById('navPassword').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPasswordView(); };
+    
+    const navSettings = document.getElementById('navSettings');
+    if (navSettings) {
+      navSettings.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSettingsView(); };
+    }
+
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); window.location.href = 'index.html'; };
 
     init();

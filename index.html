@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/pages.css?v=3.4">
   <link rel="stylesheet" href="css/newspaper_slider.css?v=1.0">
   <!-- Google Fonts for newspaper style -->
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ── Body override for slider mode ─────────────────── */
     body { overflow-x: hidden; overflow-y: auto; min-height: 100vh; display: flex; flex-direction: column; }
@@ -222,6 +222,39 @@
   <!-- ═══ FULL-PAGE NEWSPAPER SLIDER ═════════════════════ -->
   <div class="nws-slider" id="nwsSlider">
 
+    <!-- Vintage Control Bar -->
+    <div class="nws-ctrl-bar">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-clock-rotate-left" style="color: #8B7E74;"></i>
+        <span>حقبة:</span>
+        <select id="epochSelector" style="background: #3B3B3B; color: #F4F1EA; border: 1px solid #8B7E74; border-radius: 3px; padding: 2px 6px; font-family: inherit; font-size: 0.75rem; cursor: pointer;">
+          <option value="default">الافتراضي (حالي)</option>
+          <option value="1950">الخمسينيات (1950)</option>
+          <option value="1960">الستينيات (1960)</option>
+          <option value="1970">السبعينيات (1970)</option>
+          <option value="1980">الثمانينيات (1980)</option>
+          <option value="1990">التسعينيات (1990)</option>
+          <option value="2000">الألفينات (2000)</option>
+        </select>
+      </div>
+      <span style="color: #8B7E74;">|</span>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-scroll" style="color: #8B7E74;"></i>
+        <span>ورق:</span>
+        <select id="textureSelector" style="background: #3B3B3B; color: #F4F1EA; border: 1px solid #8B7E74; border-radius: 3px; padding: 2px 6px; font-family: inherit; font-size: 0.75rem; cursor: pointer;">
+          <option value="default">مطبوع الافتراضي</option>
+          <option value="rough">خشن ذو ألياف</option>
+          <option value="sepia">أصفر معتق</option>
+          <option value="yellow">مصفر حاد</option>
+          <option value="smooth">أملس مطقس</option>
+        </select>
+      </div>
+      <span style="color: #8B7E74;">|</span>
+      <button id="magnifierToggle" style="background: none; border: 1px solid #8B7E74; color: #F4F1EA; padding: 2px 8px; border-radius: 3px; font-family: inherit; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 5px;" title="تفعيل العدسة المكبرة النحاسية"><i class="fa-solid fa-magnifying-glass"></i> مكبرة</button>
+      <span style="color: #8B7E74;">|</span>
+      <button id="printPageBtn" style="background: none; border: 1px solid #8B7E74; color: #F4F1EA; padding: 2px 8px; border-radius: 3px; font-family: inherit; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 5px;" title="طباعة الصحيفة بصيغة PDF"><i class="fa-solid fa-print"></i> طباعة</button>
+    </div>
+
     <!-- Loading screen -->
     <div class="nws-loading" id="nwsLoading">
       <div class="nws-loading-inner">
@@ -235,6 +268,9 @@
     <!-- Slide Track -->
     <div class="nws-track" id="nwsTrack"></div>
 
+    <!-- Magnifier Lens circular overlay -->
+    <div class="magnifier-lens" id="magnifierLens"></div>
+
     <!-- Navigation Arrows -->
     <button class="nws-arrow nws-arrow--prev" id="nwsPrev" aria-label="السابق">&#8250;</button>
     <button class="nws-arrow nws-arrow--next" id="nwsNext" aria-label="التالي">&#8249;</button>
@@ -247,6 +283,24 @@
 
     <!-- Counter -->
     <div class="nws-counter" id="nwsCounter"></div>
+  </div>
+
+  <!-- ═══ CLIPPING MODAL — Torn Paper Scrap ════════════ -->
+  <div class="nws-modal" id="clippingModal" aria-hidden="true" role="dialog" aria-modal="true" style="z-index: 1001;">
+    <div class="nws-modal-backdrop" id="clippingModalBackdrop"></div>
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; width: 90%; max-width: 600px;">
+      <div class="torn-scrap" id="tornScrap">
+        <div class="torn-scrap-title" id="scrapTitle">عنوان المقال الصحفي</div>
+        <div class="torn-scrap-meta" id="scrapMeta">بقلم: الكاتب الصحفي | التاريخ</div>
+        <div class="torn-scrap-body" id="scrapBody">محتوى القصاصة الصحفية...</div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; font-family: 'Cairo', sans-serif;">
+        <button id="shareX" class="btn btn-primary" style="background: #000; border-color: #000; color: #fff; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 6px 16px; border-radius: 4px; font-size:0.85rem;">𝕏 مشاركة</button>
+        <button id="shareTelegram" class="btn btn-primary" style="background: #0088cc; border-color: #0088cc; color: #fff; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 6px 16px; border-radius: 4px; font-size:0.85rem;">تلغرام</button>
+        <button id="shareFacebook" class="btn btn-primary" style="background: #3b5998; border-color: #3b5998; color: #fff; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 6px 16px; border-radius: 4px; font-size:0.85rem;">فيسبوك</button>
+        <button id="closeClippingBtn" class="btn btn-outline" style="background: #fff; border-color: #ccc; color: #333; cursor: pointer; padding: 6px 16px; border-radius: 4px; font-size:0.85rem;">إغلاق</button>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ ARTICLE MODAL — Double-page Book Spread ════════ -->
@@ -272,6 +326,35 @@
     import { getSections } from './js/sections.js?v=3.4';
 
     /* ── Helpers ───────────────────────────────────────── */
+    function getWesternDates() {
+      const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      const MONTHS_WESTERN = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const d = new Date();
+      const dayName = DAYS_AR[d.getDay()];
+      const gregDay = d.getDate();
+      const gregMonth = MONTHS_WESTERN[d.getMonth()];
+      const gregYear = d.getFullYear();
+      const gregStr = `${dayName}، ${gregDay} ${gregMonth} ${gregYear}`;
+      
+      let hijriStr = '';
+      try {
+        const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+          day: 'numeric', month: 'long', year: 'numeric'
+        }).formatToParts(d);
+        let result = '';
+        parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
+        const easternToWestern = {
+          '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+          '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+        };
+        hijriStr = result.trim().replace(/[٠-٩]/g, match => easternToWestern[match]);
+      } catch (e) {
+        hijriStr = '8 صفر 1448';
+      }
+      let hijriClean = hijriStr.replace(/هـ/g, '').trim();
+      return `${gregStr}<br>${hijriClean} هـ<br>العدد الأول •`;
+    }
+
     const MONTHS = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     const toAr = s => String(s);
     const fmtDate = d => { if (!d) return ''; const dt = new Date(d); return `${toAr(dt.getDate())} ${MONTHS[dt.getMonth()]} ${toAr(dt.getFullYear())}`; };
@@ -329,34 +412,6 @@
     function tplNewspaper(posts, section) {
       const [p0, p1, p2, p3, p4] = posts;
 
-      const getWesternDates = () => {
-        const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const MONTHS_WESTERN = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-        const d = new Date();
-        const dayName = DAYS_AR[d.getDay()];
-        const gregDay = d.getDate();
-        const gregMonth = MONTHS_WESTERN[d.getMonth()];
-        const gregYear = d.getFullYear();
-        const gregStr = `${dayName}، ${gregDay} ${gregMonth} ${gregYear}`;
-        
-        let hijriStr = '';
-        try {
-          const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
-            day: 'numeric', month: 'long', year: 'numeric'
-          }).formatToParts(d);
-          let result = '';
-          parts.forEach(p => { if (p.type !== 'literal' || p.value !== ',') result += p.value; });
-          const easternToWestern = {
-            '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
-            '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
-          };
-          hijriStr = result.trim().replace(/[٠-٩]/g, match => easternToWestern[match]);
-        } catch (e) {
-          hijriStr = '8 صفر 1448';
-        }
-        let hijriClean = hijriStr.replace(/هـ/g, '').trim();
-        return `${gregStr}<br>${hijriClean} هـ<br>العدد الأول •`;
-      };
 
       // Helper to strip HTML tags for preview/excerpts
       const stripHtml = html => (html || '').replace(/<[^>]+>/g, '').trim();
@@ -422,6 +477,10 @@
                     <button class="na-title-btn na-open-modal text-right" data-post-id="${p0.id}">${p0.title}</button>
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p0.author_name || 'المحرر'}</div>
+                  <div class="nws-header-actions" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button class="scissors-btn" data-post-id="${p0.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="قص المقال كقصاصة ورق ممزقة"><i class="fa-solid fa-scissors" style="font-size: 0.8rem;"></i> قصاصة</button>
+                    <button class="radio-broadcast-btn" data-post-id="${p0.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="الاستماع للمقال بصوت المذياع"><i class="fa-solid fa-radio" style="font-size: 0.8rem;"></i> راديو</button>
+                  </div>
                   
                   <div class="text-sm text-justify" style="line-height: 1.6; margin-bottom: 1rem;">
                     <img src="${p0.featured_image_url || FALLBACK}" alt="${p0.title}" class="vintage-image" style="width: 160px; height: 160px; float: left; margin: 8px; object-fit: cover;">
@@ -444,6 +503,10 @@
                     <button class="na-title-btn na-open-modal text-right" data-post-id="${p1.id}">${p1.title}</button>
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p1.author_name || 'المحرر'}</div>
+                  <div class="nws-header-actions" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button class="scissors-btn" data-post-id="${p1.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="قص المقال كقصاصة ورق ممزقة"><i class="fa-solid fa-scissors" style="font-size: 0.8rem;"></i> قصاصة</button>
+                    <button class="radio-broadcast-btn" data-post-id="${p1.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="الاستماع للمقال بصوت المذياع"><i class="fa-solid fa-radio" style="font-size: 0.8rem;"></i> راديو</button>
+                  </div>
                   
                   <div class="mb-3">
                     <img src="${p1.featured_image_url || FALLBACK}" alt="${p1.title}" class="aspect-16-9 vintage-image">
@@ -465,6 +528,10 @@
                     <button class="na-title-btn na-open-modal text-right" data-post-id="${p2.id}">${p2.title}</button>
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p2.author_name || 'المحرر'}</div>
+                  <div class="nws-header-actions" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button class="scissors-btn" data-post-id="${p2.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="قص المقال كقصاصة ورق ممزقة"><i class="fa-solid fa-scissors" style="font-size: 0.8rem;"></i> قصاصة</button>
+                    <button class="radio-broadcast-btn" data-post-id="${p2.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="الاستماع للمقال بصوت المذياع"><i class="fa-solid fa-radio" style="font-size: 0.8rem;"></i> راديو</button>
+                  </div>
                   
                   <div class="text-sm text-justify" style="line-height: 1.6;">
                     <img src="${p2.featured_image_url || FALLBACK}" alt="${p2.title}" class="vintage-image" style="width: 140px; height: 140px; float: right; margin: 8px; object-fit: cover;">
@@ -487,6 +554,10 @@
                     <button class="na-title-btn na-open-modal text-right" data-post-id="${p3.id}">${p3.title}</button>
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p3.author_name || 'المحرر'}</div>
+                  <div class="nws-header-actions" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button class="scissors-btn" data-post-id="${p3.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="قص المقال كقصاصة ورق ممزقة"><i class="fa-solid fa-scissors" style="font-size: 0.8rem;"></i> قصاصة</button>
+                    <button class="radio-broadcast-btn" data-post-id="${p3.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="الاستماع للمقال بصوت المذياع"><i class="fa-solid fa-radio" style="font-size: 0.8rem;"></i> راديو</button>
+                  </div>
                   
                   <div class="text-sm text-justify" style="line-height: 1.6;">
                     <img src="${p3.featured_image_url || FALLBACK}" alt="${p3.title}" class="vintage-image" style="width: 110px; height: 147px; float: left; margin: 8px; object-fit: cover;">
@@ -506,6 +577,10 @@
                     <button class="na-title-btn na-open-modal text-right" data-post-id="${p4.id}">${p4.title}</button>
                   </h2>
                   <div class="text-xs opacity-75 mb-3 cairo-font">بقلم: ${p4.author_name || 'المحرر'}</div>
+                  <div class="nws-header-actions" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button class="scissors-btn" data-post-id="${p4.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="قص المقال كقصاصة ورق ممزقة"><i class="fa-solid fa-scissors" style="font-size: 0.8rem;"></i> قصاصة</button>
+                    <button class="radio-broadcast-btn" data-post-id="${p4.id}" style="background: none; border: none; font-size: 0.75rem; cursor: pointer; color: #8B7E74; font-family:'Cairo',sans-serif; display: flex; align-items: center; gap: 5px; padding: 0;" title="الاستماع للمقال بصوت المذياع"><i class="fa-solid fa-radio" style="font-size: 0.8rem;"></i> راديو</button>
+                  </div>
                   
                   <p class="text-sm text-justify mb-3" style="line-height: 1.6; margin-bottom: 0.75rem;">
                     ${part1}
@@ -565,18 +640,44 @@
       if (isAnimating) return;
       if (idx < 0 || idx >= total) return;
       isAnimating = true;
-      current = idx;
-      const track = document.getElementById('nwsTrack');
       
-      // Reset scroll position of target slide to top
-      const targetSlide = track.children[idx];
-      if (targetSlide) targetSlide.scrollTop = 0;
-
-      // RTL: slides go from RIGHT to LEFT, so positive index moves LEFT (negative %) in LTR
-      // We use negative translateX in RTL-aware way: slide N is at offset N * 100% from right
-      track.style.transform = `translateX(${idx * 100}%)`;
-      updateUI();
-      setTimeout(() => { isAnimating = false; }, 650);
+      const track = document.getElementById('nwsTrack');
+      const prevIdx = current;
+      current = idx;
+      
+      const currentSlide = track.children[prevIdx];
+      const nextSlide = track.children[idx];
+      
+      // Clear magnifier lens content
+      const lens = document.getElementById('magnifierLens');
+      lens.innerHTML = '';
+      
+      if (currentSlide && nextSlide) {
+        track.classList.add('nws-track-3d');
+        currentSlide.classList.add('nws-slide-3d');
+        nextSlide.classList.add('nws-slide-3d');
+        
+        if (idx > prevIdx) {
+          currentSlide.classList.add('flip-out');
+        } else {
+          currentSlide.classList.add('flip-in');
+        }
+        
+        setTimeout(() => {
+          track.style.transform = `translateX(${idx * 100}%)`;
+          currentSlide.className = 'nws-slide';
+          nextSlide.className = 'nws-slide';
+          track.classList.remove('nws-track-3d');
+          
+          nextSlide.scrollTop = 0;
+          updateUI();
+          isAnimating = false;
+        }, 700);
+      } else {
+        track.style.transform = `translateX(${idx * 100}%)`;
+        updateUI();
+        isAnimating = false;
+      }
     }
 
     function updateUI() {
@@ -651,6 +752,15 @@
       await renderHeader();
       renderFooter();
 
+      // Check query params to open the control bar
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tools') === 'true') {
+        const ctrlBar = document.querySelector('.nws-ctrl-bar');
+        if (ctrlBar) {
+          ctrlBar.classList.add('open');
+        }
+      }
+
       const [allPosts, sections] = await Promise.all([
         getPosts({ status: 'published', limit: 80 }),
         getSections()
@@ -716,6 +826,147 @@
         slideIndex++;
       }
 
+      // Add Entertainment page slide
+      const varietiesSection = { id: 'varieties', name_ar: 'التسلية والمنوعات', slug: 'varieties', color: '#7f8c8d' };
+      
+      // Fetch site settings for weather, currencies, quotes
+      let settings = {
+        weather_temp: "28",
+        weather_desc: "صحو دافئ مع رياح شرقية خفيفة",
+        exchange_rates: "الليرة الذهبية: 450 قرشاً | الريال المجيدي: 22 قرشاً | الجنيه الاسترليني: 110 قروش",
+        quote_text: "إن صحيفتنا هذه ليست مجرد ناقل للأخبار، بل هي منبر للأحرار وسجل لتاريخ الأمة الحقيقي.",
+        quote_author: "أديب إسحاق"
+      };
+      try {
+        const { data: dbSett } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
+        if (dbSett) settings = { ...settings, ...dbSett };
+      } catch(e){}
+
+      const rateBadges = settings.exchange_rates.split('|').map(r => `<span style="background:rgba(139,126,116,0.15); padding:4px 10px; border-radius:4px; border:1px dashed rgba(139,126,116,0.5); font-size:0.8rem; font-weight:bold; display:inline-block; margin:2px;">${r.trim()}</span>`).join(' ');
+
+      const varietiesContent = `
+        <div class="nws-slide" data-section-id="varieties">
+          <div class="nws-page tpl-real-newspaper">
+            <!-- Page Header (Masthead) -->
+            <header class="w-full text-center mb-6">
+              <div class="flex-row-md py-4 border-b-double">
+                <div class="masthead-col masthead-col-right headline-font text-right" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
+                  <span>صفحة المتفرقات والتسلية</span>
+                  <span>حكمة اليوم، أحوال الطقس والصرف</span>
+                  <span>تأسست عام 2026 م</span>
+                </div>
+                <div class="masthead-col text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <a href="index.html" class="hover:text-red-900 transition-colors block" style="text-decoration: none; color: inherit;">
+                    <img src="LOGO.png" alt="الصحيفة" style="height: 60px; margin: 0 auto; max-width: 100%; object-fit: contain; display: block;">
+                  </a>
+                </div>
+                <div class="masthead-col masthead-col-left headline-font text-left" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
+                  <span>${getWesternDates()}</span>
+                </div>
+              </div>
+            </header>
+
+            <div class="grid-3-col">
+              <!-- Column 1 -->
+              <section class="col-divider-left">
+                <h2 class="headline-font" style="font-size: 1.3rem; font-weight: 700; border-bottom: 1.5px dashed #8B7E74; padding-bottom: 5px; margin-bottom: 1rem; color: #9b1a1a; margin-top:0;">☀️ أحوال الطقس والبلاد</h2>
+                <div style="background: rgba(139,126,116,0.08); padding: 15px; border-radius: 4px; border: 1px dashed rgba(139,126,116,0.3); margin-bottom: 1.5rem; text-align: center;">
+                  <div style="font-size: 2.5rem; line-height: 1; margin-bottom:5px;">🌡️</div>
+                  <div style="font-size: 1.8rem; font-weight: bold; font-family: 'Amiri', serif; margin: 5px 0;">${settings.weather_temp}°م</div>
+                  <p style="font-size: 0.85rem; line-height: 1.4; color: #333; margin: 0;">${settings.weather_desc}</p>
+                </div>
+
+                <h2 class="headline-font" style="font-size: 1.3rem; font-weight: 700; border-bottom: 1.5px dashed #8B7E74; padding-bottom: 5px; margin-bottom: 1rem; color: #9b1a1a;">💰 أسعار الصرف التاريخية</h2>
+                <div style="display: flex; flex-direction: column; gap: 6px; font-family: 'Cairo', sans-serif;">
+                  ${rateBadges}
+                </div>
+              </section>
+
+              <!-- Column 2 -->
+              <section class="col-divider-both">
+                <h2 class="headline-font" style="font-size: 1.3rem; font-weight: 700; border-bottom: 1.5px dashed #8B7E74; padding-bottom: 5px; margin-bottom: 1rem; color: #9b1a1a; margin-top:0;">📜 حكمة اليوم الخالدة</h2>
+                <blockquote style="font-family: 'Amiri', serif; font-size: 1.15rem; font-style: italic; line-height: 1.5; padding: 5px 15px; border-right: 4px solid #9b1a1a; margin: 0 0 1rem 0; text-align: justify; color: #444;">
+                  "${settings.quote_text}"
+                  <cite style="display: block; font-size: 0.8rem; font-style: normal; font-weight: bold; margin-top: 5px; color: #9b1a1a; text-align: left;">— ${settings.quote_author}</cite>
+                </blockquote>
+
+                <h2 class="headline-font" style="font-size: 1.3rem; font-weight: 700; border-bottom: 1.5px dashed #8B7E74; padding-bottom: 5px; margin-top: 1.5rem; margin-bottom: 1rem; color: #9b1a1a;">🧩 أحجية العدد</h2>
+                <div style="background: rgba(139,126,116,0.05); padding: 15px; border-radius: 4px; border: 1px dashed rgba(139,126,116,0.25);">
+                  <p style="font-family: 'Amiri', serif; font-size: 1rem; line-height: 1.4; text-align: justify; margin: 0 0 10px 0;"><strong>اللغز:</strong> ما هو الشيء الذي يكتب ولا يقرأ، ويسير بلا رجلين، ويبكي بلا عينين؟</p>
+                  <div style="display: flex; gap: 5px;">
+                    <input type="text" id="riddleAnswer" placeholder="أدخل إجابتك هنا..." style="flex: 1; padding: 4px 8px; border: 1px solid #8B7E74; background: #FAF8F5; border-radius: 3px; font-family: 'Cairo', sans-serif; font-size: 0.8rem; box-sizing:border-box;">
+                    <button onclick="checkRiddle()" style="background: #9b1a1a; color: #fff; border: none; padding: 4px 12px; border-radius: 3px; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.8rem;">تحقق</button>
+                  </div>
+                  <p id="riddleFeedback" style="font-family: 'Cairo', sans-serif; font-size: 0.75rem; margin: 8px 0 0 0; font-weight: bold; display: none;"></p>
+                </div>
+              </section>
+
+              <!-- Column 3 -->
+              <section class="col-divider-right">
+                <h2 class="headline-font" style="font-size: 1.3rem; font-weight: 700; border-bottom: 1.5px dashed #8B7E74; padding-bottom: 5px; margin-bottom: 1rem; color: #9b1a1a; margin-top:0;">✏️ الكلمات المتقاطعة المصغرة</h2>
+                <p style="font-size: 0.75rem; margin: 0 0 8px 0; color: #666; font-family: 'Cairo', sans-serif;">املأ المربعات لتشكل كلمات صحيحة:</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 35px); gap: 4px; justify-content: center; margin-bottom: 0.75rem;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="0" data-col="0" value="ص" readonly style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#E5E2DA; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="0" data-col="1" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="0" data-col="2" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  
+                  <input type="text" maxlength="1" class="cw-cell" data-row="1" data-col="0" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="1" data-col="1" value="" disabled style="width:35px; height:35px; background:#2B2B2B; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="1" data-col="2" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  
+                  <input type="text" maxlength="1" class="cw-cell" data-row="2" data-col="0" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="2" data-col="1" placeholder="؟" style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#FAF8F5; border:1px solid #8B7E74;">
+                  <input type="text" maxlength="1" class="cw-cell" data-row="2" data-col="2" value="ة" readonly style="width:35px; height:35px; text-align:center; font-weight:bold; font-size:1.1rem; background:#E5E2DA; border:1px solid #8B7E74;">
+                </div>
+                
+                <div style="font-size: 0.75rem; font-family:'Cairo',sans-serif; line-height: 1.3; color: #444; margin-bottom:10px;">
+                  <strong>القرائن:</strong><br>
+                  • أفقياً (1): مرادف جريدة (ص ح ي ف ة)<br>
+                  • عمودياً (1): عنوان الصحيفة الحالية (ص ح ي ف ة)
+                </div>
+
+                <div style="text-align: center;">
+                  <button onclick="checkCrossword()" style="background: #9b1a1a; color: #fff; border: none; padding: 4px 12px; border-radius: 3px; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.8rem;">تحقق الكلمات</button>
+                  <p id="cwFeedback" style="font-family: 'Cairo', sans-serif; font-size: 0.75rem; margin: 8px 0 0 0; font-weight: bold; display: none;"></p>
+                </div>
+              </section>
+            </div>
+
+            <!-- Footer Line -->
+            <footer class="mt-6 pt-4 border-t-double text-center text-xs opacity-75 headline-font">
+              <p>© 2026 الصحيفة. جميع الحقوق محفوظة. صحيفة أسبوعية فكرية مستقلة.</p>
+            </footer>
+          </div>
+        </div>
+      `;
+
+      // Build Entertainment Slide
+      const varWrapper = document.createElement('div');
+      varWrapper.innerHTML = varietiesContent;
+      const varSlideEl = varWrapper.firstElementChild;
+      const varBand = sectionBand(varietiesSection, slideIndex, sections.length + 1);
+      
+      const varPageEl = varSlideEl.querySelector('.nws-page');
+      if (varPageEl) {
+        varPageEl.insertAdjacentHTML('afterbegin', varBand);
+      } else {
+        varSlideEl.insertAdjacentHTML('afterbegin', varBand);
+      }
+      track.appendChild(varSlideEl);
+
+      // Dot for varieties page
+      const varDot = document.createElement('button');
+      varDot.className = 'nws-dot';
+      varDot.setAttribute('aria-label', varietiesSection.name_ar);
+      varDot.title = varietiesSection.name_ar;
+      varDot.style.setProperty('--dot-color', varietiesSection.color);
+      varDot.addEventListener('click', () => goTo(slideIndex));
+      dotsEl.appendChild(varDot);
+
+      slides.push({ section: varietiesSection, posts: [] });
+      slideIndex++;
+
       total = slides.length;
 
       if (total === 0) {
@@ -756,6 +1007,307 @@
       document.getElementById('nwsModalClose').addEventListener('click', closeModal);
       document.getElementById('nwsModalBackdrop').addEventListener('click', closeModal);
 
+      // --- Time Machine / Toolbar Observers ---
+      document.getElementById('epochSelector').addEventListener('change', function(e) {
+        const epoch = e.target.value;
+        const slider = document.getElementById('nwsSlider');
+        slider.classList.remove('epoch-1950', 'epoch-1960', 'epoch-1970', 'epoch-1980', 'epoch-1990', 'epoch-2000');
+        if (epoch !== 'default') {
+          slider.classList.add(`epoch-${epoch}`);
+        }
+      });
+
+      document.getElementById('textureSelector').addEventListener('change', function(e) {
+        const texture = e.target.value;
+        document.querySelectorAll('.nws-page').forEach(page => {
+          page.classList.remove('tex-rough', 'tex-sepia', 'tex-yellow', 'tex-smooth');
+          if (texture !== 'default') {
+            page.classList.add(`tex-${texture}`);
+          }
+        });
+      });
+
+      let magnifierActive = false;
+      document.getElementById('magnifierToggle').addEventListener('click', function() {
+        magnifierActive = !magnifierActive;
+        const slider = document.getElementById('nwsSlider');
+        const btn = document.getElementById('magnifierToggle');
+        const lens = document.getElementById('magnifierLens');
+        
+        if (magnifierActive) {
+          slider.classList.add('magnifying-active');
+          btn.style.background = '#8B7E74';
+          btn.style.color = '#000';
+        } else {
+          slider.classList.remove('magnifying-active');
+          btn.style.background = 'none';
+          btn.style.color = '#F4F1EA';
+          lens.style.display = 'none';
+          lens.innerHTML = '';
+        }
+      });
+
+      document.getElementById('nwsSlider').addEventListener('mousemove', function(e) {
+        if (!magnifierActive) return;
+        const lens = document.getElementById('magnifierLens');
+        const slider = document.getElementById('nwsSlider');
+        const activeSlide = track.children[current];
+        if (!activeSlide) return;
+
+        const sliderRect = slider.getBoundingClientRect();
+        const x = e.clientX - sliderRect.left;
+        const y = e.clientY - sliderRect.top;
+
+        lens.style.display = 'block';
+        lens.style.left = `${x - 80}px`;
+        lens.style.top = `${y - 80}px`;
+
+        let zoomedContent = lens.querySelector('.nws-page');
+        if (!zoomedContent) {
+          lens.innerHTML = '';
+          const pageEl = activeSlide.querySelector('.nws-page');
+          if (!pageEl) return;
+          const pageClone = pageEl.cloneNode(true);
+          pageClone.querySelectorAll('.scissors-btn, .radio-broadcast-btn, .read-more-btn, .nws-header-actions').forEach(btn => btn.style.display = 'none');
+          pageClone.style.transform = 'scale(1.6)';
+          pageClone.style.transformOrigin = '0 0';
+          pageClone.style.position = 'absolute';
+          pageClone.style.width = `${pageEl.offsetWidth}px`;
+          pageClone.style.height = `${pageEl.offsetHeight}px`;
+          lens.appendChild(pageClone);
+          zoomedContent = pageClone;
+        }
+
+        const pageEl = activeSlide.querySelector('.nws-page');
+        if (pageEl) {
+          const pageRect = pageEl.getBoundingClientRect();
+          const relX = e.clientX - pageRect.left;
+          const relY = e.clientY - pageRect.top;
+          zoomedContent.style.left = `${-relX * 1.6 + 80}px`;
+          zoomedContent.style.top = `${-relY * 1.6 + 80}px`;
+        }
+      });
+      
+      document.getElementById('nwsSlider').addEventListener('mouseleave', function() {
+        document.getElementById('magnifierLens').style.display = 'none';
+      });
+
+      document.getElementById('printPageBtn').addEventListener('click', function() {
+        for (let i = 0; i < track.children.length; i++) {
+          track.children[i].classList.toggle('active-print', i === current);
+        }
+        window.print();
+      });
+
+      // --- Article Clippings Modals ---
+      function generateSummary(content) {
+        if (!content) return "";
+        // Clean HTML tags and replace with space to avoid word joining, then normalize spacing
+        const clean = content.replace(/<\/?[^>]+(>|$)/g, " ").replace(/\s+/g, " ").trim();
+        // Split by sentences (Arabic punctuation: . or ؟ or !)
+        const sentences = clean.split(/[.؟!]+/).map(s => s.trim()).filter(s => s.length > 15);
+        if (sentences.length === 0) {
+          return clean.substring(0, 180) + '...';
+        }
+        // Always return a subset of sentences to guarantee it's a summary rather than the full text
+        const limit = sentences.length > 2 ? Math.min(2, sentences.length - 1) : 1;
+        return sentences.slice(0, limit).join('. ') + '.';
+      }
+
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.scissors-btn');
+        if (btn) {
+          e.preventDefault();
+          const postId = btn.dataset.postId;
+          const post = ALL_POSTS.find(p => p.id === postId);
+          if (post) {
+            const scrapTitle = document.getElementById('scrapTitle');
+            const scrapMeta = document.getElementById('scrapMeta');
+            const scrapBody = document.getElementById('scrapBody');
+            const dateStr = fmtDate(post.published_at || post.created_at);
+
+            const summaryText = generateSummary(post.content || post.excerpt || '');
+
+            scrapTitle.textContent = post.title;
+            scrapMeta.textContent = `بقلم: ${post.author_name || 'المحرر'} | التاريخ: ${dateStr}`;
+            scrapBody.innerHTML = `
+              <p style="font-weight: bold; margin-bottom: 0.5rem; color: #b8860b; font-family: 'Cairo', sans-serif;">📌 خلاصة المقال الصحفي للنشـر:</p>
+              <p style="line-height: 1.7; text-align: justify; font-style: italic; font-family: 'Noto Naskh Arabic', serif;">${summaryText}</p>
+            `;
+
+            document.getElementById('clippingModal').classList.add('open');
+            document.getElementById('clippingModal').setAttribute('aria-hidden', 'false');
+            
+            const shareText = `«${post.title}» - خلاصة:\n${summaryText.substring(0, 150)}...\n\nلقراءة المقال كاملاً:`;
+            const pageUrl = window.location.href;
+
+            document.getElementById('shareX').onclick = () => {
+              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`, '_blank');
+            };
+            document.getElementById('shareTelegram').onclick = () => {
+              window.open(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+            };
+            document.getElementById('shareFacebook').onclick = () => {
+              window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, '_blank');
+            };
+          }
+        }
+      });
+
+      document.getElementById('closeClippingBtn').onclick = closeClipping;
+      document.getElementById('clippingModalBackdrop').onclick = closeClipping;
+      
+      function closeClipping() {
+        const m = document.getElementById('clippingModal');
+        m.classList.remove('open');
+        m.setAttribute('aria-hidden', 'true');
+      }
+
+      // --- Vintage AM Radio SpeechSynthesis ---
+      let noiseNode = null;
+      let audioCtx = null;
+      let isSpeaking = false;
+
+      function playRadioStatic() {
+        try {
+          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtxClass) return;
+          if (audioCtx) return;
+          audioCtx = new AudioCtxClass();
+          
+          const bufferSize = 2 * audioCtx.sampleRate;
+          const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          
+          noiseNode = audioCtx.createBufferSource();
+          noiseNode.buffer = noiseBuffer;
+          noiseNode.loop = true;
+          
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 1000;
+          filter.Q.value = 1.2;
+          
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.value = 0.04;
+          
+          noiseNode.connect(filter);
+          filter.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          noiseNode.start();
+        } catch(e) {
+          console.error('Web Audio not supported or blocked:', e);
+        }
+      }
+
+      function stopRadioStatic() {
+        if (noiseNode) {
+          try { noiseNode.stop(); } catch(e){}
+          noiseNode = null;
+        }
+        if (audioCtx) {
+          try { audioCtx.close(); } catch(e){}
+          audioCtx = null;
+        }
+      }
+
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.radio-broadcast-btn');
+        if (btn) {
+          e.preventDefault();
+          const postId = btn.dataset.postId;
+          const post = ALL_POSTS.find(p => p.id === postId);
+          if (!post) return;
+
+          if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            stopRadioStatic();
+            isSpeaking = false;
+            document.querySelectorAll('.radio-broadcast-btn').forEach(b => {
+              b.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
+              b.style.color = '#8B7E74';
+            });
+            return;
+          }
+
+          btn.innerHTML = '<i class="fa-solid fa-circle-stop" style="font-size:0.8rem; margin-left: 3px;"></i> إيقاف';
+          btn.style.color = '#d63031';
+
+          isSpeaking = true;
+          playRadioStatic();
+
+          const cleanText = (post.content || post.excerpt || '').replace(/<[^>]+>/g, '').trim();
+          const speechText = `أهلاً بكم مستمعينا الأفاضل عبر أثير إذاعة الصحيفة. نستمع معاً إلى قراءة للمقال المعنون: ${post.title}، بقلم الكاتب: ${post.author_name || 'المحرر'}: \n\n ${cleanText} \n\n إلى هنا تنتهي قراءتنا الصوتية لهذا المقال، نشكركم على حسن المتابعة والإصغاء.`;
+          
+          const utterance = new SpeechSynthesisUtterance(speechText);
+          utterance.lang = 'ar-SA';
+          utterance.rate = 0.9;
+          
+          const voices = window.speechSynthesis.getVoices();
+          const arVoice = voices.find(v => v.lang.includes('ar'));
+          if (arVoice) utterance.voice = arVoice;
+
+          utterance.onend = () => {
+            stopRadioStatic();
+            isSpeaking = false;
+            btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
+            btn.style.color = '#8B7E74';
+          };
+
+          utterance.onerror = () => {
+            stopRadioStatic();
+            isSpeaking = false;
+            btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
+            btn.style.color = '#8B7E74';
+          };
+
+          window.speechSynthesis.speak(utterance);
+        }
+      });
+
+      // --- Varieties Page Interactions ---
+      window.checkRiddle = function() {
+        const ans = document.getElementById('riddleAnswer').value.trim();
+        const fb = document.getElementById('riddleFeedback');
+        fb.style.display = 'block';
+        if (ans === 'القلم' || ans.includes('قلم')) {
+          fb.textContent = '✅ أحسنت! إجابتك صحيحة (القلم).';
+          fb.style.color = '#27ae60';
+        } else {
+          fb.textContent = '❌ إجابة غير صحيحة، حاول مجدداً.';
+          fb.style.color = '#c0392b';
+        }
+      };
+
+      window.checkCrossword = function() {
+        const inputs = document.querySelectorAll('.cw-cell');
+        let correct = true;
+        inputs.forEach(input => {
+          const r = input.dataset.row;
+          const c = input.dataset.col;
+          const val = input.value.trim();
+          if (r === '0' && c === '1' && val !== 'ح') correct = false;
+          if (r === '0' && c === '2' && val !== 'ف') correct = false;
+          if (r === '1' && c === '0' && val !== 'ح') correct = false;
+          if (r === '1' && c === '2' && val !== 'ي') correct = false;
+          if (r === '2' && c === '0' && val !== 'ي') correct = false;
+          if (r === '2' && c === '1' && val !== 'ف') correct = false;
+        });
+        
+        const fb = document.getElementById('cwFeedback');
+        fb.style.display = 'block';
+        if (correct) {
+          fb.textContent = '✅ تهانينا! جميع الكلمات صحيحة.';
+          fb.style.color = '#27ae60';
+        } else {
+          fb.textContent = '❌ توجد بعض المربعات غير الصحيحة.';
+          fb.style.color = '#c0392b';
+        }
+      };
+
       // Hide loading
       const loading = document.getElementById('nwsLoading');
       loading.style.opacity = '0';
@@ -765,7 +1317,7 @@
       updateUI();
 
       // Clear cached posts so fresh seed applies
-      const v = '3.4';
+      const v = '3.5';
       if (localStorage.getItem('sa7ifa_slider_v') !== v) {
         localStorage.removeItem('sa7ifa_db_posts');
         localStorage.removeItem('sa7ifa_db_articles');

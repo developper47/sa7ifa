@@ -187,7 +187,12 @@ const SETTINGS_SEED = [
   {
     id: 1,
     site_name: "الصحيفة",
-    default_post_image_url: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"
+    default_post_image_url: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80",
+    weather_temp: "28",
+    weather_desc: "صحو دافئ مع رياح شرقية خفيفة",
+    exchange_rates: "الليرة الذهبية: 450 قرشاً | الريال المجيدي: 22 قرشاً | الجنيه الاسترليني: 110 قروش",
+    quote_text: "إن صحيفتنا هذه ليست مجرد ناقل للأخبار، بل هي منبر للأحرار وسجل لتاريخ الأمة الحقيقي.",
+    quote_author: "أديب إسحاق"
   }
 ];
 
@@ -266,7 +271,7 @@ class SupabaseQueryBuilder {
   }
 
   async execute() {
-    const SEED_VERSION = 'v4'; // bump this when POSTS_SEED or SECTIONS_SEED change
+    const SEED_VERSION = 'v5'; // bump this when POSTS_SEED or SECTIONS_SEED change
     const storedVersion = localStorage.getItem('sa7ifa_seed_version');
 
     // Re-seed if version mismatch (preserving user-created posts)
@@ -301,6 +306,21 @@ class SupabaseQueryBuilder {
           updated_at: new Date().toISOString()
         });
         localStorage.setItem('sa7ifa_db_sections', JSON.stringify(currentSections));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Self-healing migration for existing databases to ensure site settings columns exist
+    try {
+      let currentSettings = JSON.parse(localStorage.getItem('sa7ifa_db_site_settings')) || [];
+      if (currentSettings.length > 0 && currentSettings[0] && !currentSettings[0].weather_temp) {
+        currentSettings[0].weather_temp = "28";
+        currentSettings[0].weather_desc = "صحو دافئ مع رياح شرقية خفيفة";
+        currentSettings[0].exchange_rates = "الليرة الذهبية: 450 قرشاً | الريال المجيدي: 22 قرشاً | الجنيه الاسترليني: 110 قروش";
+        currentSettings[0].quote_text = "إن صحيفتنا هذه ليست مجرد ناقل للأخبار، بل هي منبر للأحرار وسجل لتاريخ الأمة الحقيقي.";
+        currentSettings[0].quote_author = "أديب إسحاق";
+        localStorage.setItem('sa7ifa_db_site_settings', JSON.stringify(currentSettings));
       }
     } catch (e) {
       console.error(e);
