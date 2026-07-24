@@ -1074,3 +1074,380 @@
   .nws-section-badge { display: none; }
 }
 
+/* ============================================================
+   Time Machine Epoch Styles
+   ============================================================ */
+
+/* --- Epoch 1950s --- */
+.epoch-1950 .nws-page {
+  font-family: 'Aref Ruqaa', 'Amiri', serif !important;
+  --accent: #5c3d2e !important;
+  border: 1.5px solid #5c3d2e !important;
+}
+.epoch-1950 .nws-page h2, 
+.epoch-1950 .nws-page button, 
+.epoch-1950 .nws-page span,
+.epoch-1950 .nws-page a {
+  font-family: 'Aref Ruqaa', 'Amiri', serif !important;
+}
+.epoch-1950 .nws-page .vintage-image {
+  filter: grayscale(100%) contrast(75%) brightness(95%) sepia(20%) !important;
+}
+.epoch-1950 .nws-page .col-divider-left,
+.epoch-1950 .nws-page .col-divider-both,
+.epoch-1950 .nws-page .border-b-double,
+.epoch-1950 .nws-page .border-t-double {
+  border-color: rgba(92, 61, 46, 0.4) !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+}
+
+/* --- Epoch 1960s --- */
+.epoch-1960 .nws-page {
+  font-family: 'Scheherazade New', 'Noto Naskh Arabic', serif !important;
+  --accent: #111111 !important;
+  border: 3.5px solid #111111 !important;
+}
+.epoch-1960 .nws-page h2, 
+.epoch-1960 .nws-page button, 
+.epoch-1960 .nws-page span,
+.epoch-1960 .nws-page a {
+  font-family: 'Scheherazade New', 'Noto Naskh Arabic', serif !important;
+  font-weight: 700 !important;
+}
+.epoch-1960 .nws-page .vintage-image {
+  filter: grayscale(100%) contrast(150%) brightness(85%) !important;
+  border: 3px solid #111111 !important;
+}
+.epoch-1960 .nws-page .col-divider-left,
+.epoch-1960 .nws-page .col-divider-both,
+.epoch-1960 .nws-page .border-b-double,
+.epoch-1960 .nws-page .border-t-double {
+  border-color: #111111 !important;
+  border-style: solid !important;
+  border-width: 2.5px !important;
+}
+
+/* --- Epoch 1970s --- */
+.epoch-1970 .nws-page {
+  font-family: 'Reem Kufi', 'Cairo', sans-serif !important;
+  --accent: #2c3e50 !important;
+  border: 2px dashed #2c3e50 !important;
+  background-image: url('../Textures%20papier/70s.png') !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.epoch-1970 .nws-page h2, 
+.epoch-1970 .nws-page button, 
+.epoch-1970 .nws-page span,
+.epoch-1970 .nws-page a {
+  font-family: 'Reem Kufi', 'Cairo', sans-serif !important;
+}
+.epoch-1970 .nws-page .vintage-image {
+  filter: grayscale(100%) contrast(120%) brightness(100%) !important;
+  background-image: radial-gradient(circle, #333 1px, transparent 1.5px) !important;
+  background-size: 3px 3px !important;
+  background-repeat: repeat !important;
+  background-blend-mode: multiply !important;
+}
+.epoch-1970 .nws-page .col-divider-left,
+.epoch-1970 .nws-page .col-divider-both,
+.epoch-1970 .nws-page .border-b-double,
+.epoch-1970 .nws-page .border-t-double {
+  border-color: #2c3e50 !important;
+  border-style: dotted !important;
+  border-width: 2px !important;
+}
+
+/* --- Epoch 1980s --- */
+.epoch-1980 .nws-page {
+  font-family: 'Lateef', 'Noto Naskh Arabic', serif !important;
+  --accent: #c0392b !important;
+  border: 3px double #c0392b !important;
+  background-image: url('../Textures%20papier/80s.png') !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.epoch-1980 .nws-page h2, 
+.epoch-1980 .nws-page button, 
+.epoch-1980 .nws-page span,
+.epoch-1980 .nws-page a {
+  font-family: 'Lateef', 'Noto Naskh Arabic', serif !important;
+  font-size: 1.1em !important;
+}
+.epoch-1980 .nws-page h2 button {
+  color: #2980b9 !important; /* Blue headlines */
+}
+.epoch-1980 .nws-page .vintage-image {
+  filter: sepia(35%) contrast(110%) brightness(95%) !important;
+  border: 2px solid #c0392b !important;
+}
+.epoch-1980 .nws-page .col-divider-left,
+.epoch-1980 .nws-page .col-divider-both,
+.epoch-1980 .nws-page .border-b-double,
+.epoch-1980 .nws-page .border-t-double {
+  border-color: #c0392b !important;
+  border-style: double !important;
+  border-width: 3px !important;
+}
+
+/* --- Epoch 1990s --- */
+.epoch-1990 .nws-page {
+  font-family: Arial, sans-serif !important;
+  --accent: #2b2b2b !important;
+  border: 2px solid #7f8c8d !important;
+  background-image: url('../Textures%20papier/90s.png') !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.epoch-1990 .nws-page h2, 
+.epoch-1990 .nws-page button, 
+.epoch-1990 .nws-page span,
+.epoch-1990 .nws-page a {
+  font-family: Arial, sans-serif !important;
+}
+.epoch-1990 .nws-page h2 button {
+  color: #8e44ad !important; /* Purple highlights */
+}
+.epoch-1990 .nws-page .vintage-image {
+  filter: saturate(1.2) contrast(1.1) !important;
+  border: 1px solid #7f8c8d !important;
+}
+.epoch-1990 .nws-page .col-divider-left,
+.epoch-1990 .nws-page .col-divider-both,
+.epoch-1990 .nws-page .border-b-double,
+.epoch-1990 .nws-page .border-t-double {
+  border-color: #7f8c8d !important;
+  border-style: solid !important;
+  border-width: 1.5px !important;
+}
+
+/* --- Epoch 2000s --- */
+.epoch-2000 .nws-page {
+  font-family: 'Cairo', sans-serif !important;
+  --accent: #e74c3c !important;
+  border: 1px solid #dcdde1 !important;
+  border-radius: 8px !important;
+  background-image: url('../Textures%20papier/2000s.png') !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.epoch-2000 .nws-page h2, 
+.epoch-2000 .nws-page button, 
+.epoch-2000 .nws-page span,
+.epoch-2000 .nws-page a {
+  font-family: 'Cairo', sans-serif !important;
+}
+.epoch-2000 .nws-page .vintage-image {
+  filter: none !important;
+  border: none !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+  border-radius: 6px !important;
+}
+.epoch-2000 .nws-page .col-divider-left,
+.epoch-2000 .nws-page .col-divider-both,
+.epoch-2000 .nws-page .border-b-double,
+.epoch-2000 .nws-page .border-t-double {
+  border-color: #dcdde1 !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+}
+
+/* ============================================================
+   Paper Textures Styles
+   ============================================================ */
+
+.nws-page.tex-rough {
+  background-color: #E2DCCF !important;
+  background-image: 
+    radial-gradient(rgba(120, 100, 80, 0.08) 15%, transparent 20%),
+    repeating-linear-gradient(rgba(0,0,0,0.01) 0px, rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px) !important;
+  background-size: 6px 6px, 100% 10px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15), inset 0 0 140px rgba(90,70,50,0.2) !important;
+}
+.nws-page.tex-sepia {
+  background-color: #E5CCA2 !important;
+  background-image: 
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.2) 0%, rgba(139,112,68,0.2) 100%) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.18), inset 0 0 160px rgba(100,80,40,0.3) !important;
+}
+.nws-page.tex-yellow {
+  background-color: #ECE5C6 !important;
+  background-image: 
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 1px, transparent 1px) !important;
+  background-size: 100% 28px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12), inset 0 0 100px rgba(80,75,40,0.15) !important;
+}
+.nws-page.tex-smooth {
+  background-color: #F8F5EE !important;
+  background-image: none !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 0 80px rgba(0,0,0,0.02) !important;
+}
+
+/* ============================================================
+   Magnifying Glass
+   ============================================================ */
+
+.magnifier-lens {
+  position: absolute;
+  border: 4px solid #b8860b;
+  border-radius: 50%;
+  cursor: none;
+  width: 160px;
+  height: 160px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.3);
+  display: none;
+  pointer-events: none;
+  z-index: 9999;
+  background-repeat: no-repeat;
+  background-color: #F1ECE1;
+  overflow: hidden;
+}
+.nws-slider.magnifying-active .nws-page {
+  cursor: crosshair;
+}
+
+/* ── Vintage Control Bar ────────────────────────────────── */
+.nws-ctrl-bar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: none; /* Hidden by default */
+  gap: 0.75rem;
+  background: #2B2B2B;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #8B7E74;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.8rem;
+  color: #F4F1EA;
+  align-items: center;
+  direction: rtl;
+  transition: all 0.3s ease;
+}
+.nws-ctrl-bar.open {
+  display: flex !important;
+}
+
+/* ============================================================
+   Torn Scrap Clippings
+   ============================================================ */
+
+.torn-scrap {
+  background-color: #f6f3eb;
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.02) 100%),
+    repeating-linear-gradient(rgba(165,145,115,0.03) 0px, rgba(165,145,115,0.03) 1px, transparent 1px, transparent 24px);
+  padding: 2.5rem;
+  border: 1px dashed rgba(139,126,116,0.5);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  position: relative;
+  max-width: 550px;
+  margin: 1.5rem auto;
+  filter: drop-shadow(2px 4px 10px rgba(0,0,0,0.15));
+  clip-path: polygon(
+    0% 2%, 3% 0%, 7% 3%, 12% 0%, 17% 2%, 22% 0%, 28% 3%, 33% 0%, 39% 2%, 44% 0%, 50% 3%, 56% 0%, 61% 2%, 67% 0%, 72% 3%, 78% 0%, 83% 2%, 89% 0%, 94% 3%, 100% 0%,
+    98% 8%, 100% 15%, 97% 22%, 100% 30%, 98% 38%, 100% 45%, 97% 53%, 100% 61%, 98% 68%, 100% 76%, 97% 83%, 100% 90%, 98% 97%, 100% 100%,
+    94% 98%, 89% 100%, 83% 97%, 78% 100%, 72% 98%, 67% 100%, 61% 97%, 56% 100%, 50% 98%, 44% 100%, 39% 97%, 33% 100%, 28% 98%, 22% 100%, 17% 97%, 12% 100%, 7% 97%, 3% 100%, 0% 98%,
+    2% 90%, 0% 83%, 3% 76%, 1% 68%, 3% 61%, 0% 53%, 2% 45%, 0% 38%, 3% 30%, 1% 22%, 3% 15%, 0% 8%
+  );
+}
+.torn-scrap-title {
+  font-family: 'Amiri', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #2b2b2b;
+  text-align: center;
+  line-height: 1.3;
+}
+.torn-scrap-meta {
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px dashed rgba(0,0,0,0.1);
+  padding-bottom: 0.5rem;
+}
+.torn-scrap-body {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #333;
+  text-align: justify;
+}
+
+/* ============================================================
+   3D Page Flip Transitions
+   ============================================================ */
+
+.nws-track-3d {
+  perspective: 2000px;
+  transform-style: preserve-3d;
+}
+.nws-slide-3d {
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.7s ease !important;
+  transform-origin: right center;
+}
+.nws-slide-3d.flip-out {
+  transform: rotateY(-90deg) scale(0.9);
+  opacity: 0;
+}
+.nws-slide-3d.flip-in {
+  transform: rotateY(90deg) scale(0.9);
+  opacity: 0;
+}
+
+/* ============================================================
+   PDF / Print Overrides
+   ============================================================ */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .site-header, 
+  .site-footer, 
+  .nws-band-link,
+  .nws-arrow, 
+  .nws-dots, 
+  .nws-badge,
+  .read-more-btn,
+  .scissors-btn,
+  .radio-broadcast-btn,
+  .nws-header-actions,
+  .nws-ctrl-bar,
+  .magnifier-lens,
+  #epochSelectorContainer {
+    display: none !important;
+  }
+  .nws-slider {
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .nws-track {
+    transform: none !important;
+    display: block !important;
+  }
+  .nws-slide {
+    width: 100% !important;
+    display: none !important;
+  }
+  .nws-slide.active-print {
+    display: block !important;
+    page-break-after: always;
+  }
+  .nws-page {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    background: none !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
+
+

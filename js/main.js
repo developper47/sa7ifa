@@ -84,6 +84,14 @@ export function getFavoritePosts() {
  * Render the site header with dynamic section navigation.
  */
 export async function renderHeader() {
+  // Dynamically load FontAwesome for authentic vintage icons
+  if (!document.querySelector('link[href*="font-awesome"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css';
+    document.head.appendChild(link);
+  }
+
   let user = null;
   let sections = [];
   
@@ -155,6 +163,7 @@ export async function renderHeader() {
           <ul class="nav-links-broadsheet" id="navLinks" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; flex-grow: 1; justify-content: center;">
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
+            <li><a href="index.html?tools=true" id="navbarToolsBtn" style="display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-sliders"></i> أدوات</a></li>
             <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
 
@@ -177,6 +186,7 @@ export async function renderHeader() {
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
         ${sections.filter(s => s.slug !== 'home').map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
+        <li><a href="index.html?tools=true" id="mobileNavbarToolsBtn" class="mobile-nav-tools-link" style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-sliders"></i> أدوات</a></li>
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
       <div class="mobile-menu-footer">
@@ -246,6 +256,25 @@ export async function renderHeader() {
       window.location.href = 'index.html';
     };
   });
+
+  // Tools toggle event listeners
+  const toggleTools = (e) => {
+    const isHomePage = window.location.pathname.endsWith('index.html') || 
+                       window.location.pathname.endsWith('/') || 
+                       window.location.pathname === '';
+    
+    if (isHomePage) {
+      e.preventDefault();
+      const ctrlBar = document.querySelector('.nws-ctrl-bar');
+      if (ctrlBar) {
+        ctrlBar.classList.toggle('open');
+      }
+      closeMobileMenu();
+    }
+  };
+
+  document.getElementById('navbarToolsBtn')?.addEventListener('click', toggleTools);
+  document.getElementById('mobileNavbarToolsBtn')?.addEventListener('click', toggleTools);
 }
 
 /**
