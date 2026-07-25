@@ -220,7 +220,7 @@
 <body>
 
   <!-- ═══ FULL-PAGE NEWSPAPER SLIDER ═════════════════════ -->
-  <div class="nws-slider" id="nwsSlider">
+  <div class="nws-slider epoch-2000" id="nwsSlider">
 
     <!-- Vintage Control Bar -->
     <div class="nws-ctrl-bar">
@@ -234,7 +234,7 @@
           <option value="1970">السبعينيات (1970)</option>
           <option value="1980">الثمانينيات (1980)</option>
           <option value="1990">التسعينيات (1990)</option>
-          <option value="2000">الألفينات (2000)</option>
+          <option value="2000" selected>الألفينات (2000)</option>
         </select>
       </div>
       <span style="color: #8B7E74;">|</span>
@@ -656,26 +656,35 @@
       lens.innerHTML = '';
       
       if (currentSlide && nextSlide) {
-        track.classList.add('nws-track-3d');
-        currentSlide.classList.add('nws-slide-3d');
-        nextSlide.classList.add('nws-slide-3d');
+        // Overlay current slide on top of next slide
+        currentSlide.style.position = 'absolute';
+        currentSlide.style.zIndex = '100';
+        currentSlide.style.left = '0';
+        currentSlide.style.top = '0';
+        currentSlide.style.width = '100%';
+        currentSlide.style.height = '100%';
         
-        if (idx > prevIdx) {
-          currentSlide.classList.add('flip-out');
-        } else {
-          currentSlide.classList.add('flip-in');
+        // Translate the track instantly underneath currentSlide
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${idx * 100}%)`;
+        
+        // Trigger page curl/flip on the inner .nws-page container
+        const page = currentSlide.querySelector('.nws-page');
+        if (page) {
+          page.classList.add((idx > prevIdx) ? 'page-flip-left' : 'page-flip-right');
         }
         
         setTimeout(() => {
-          track.style.transform = `translateX(${idx * 100}%)`;
-          currentSlide.className = 'nws-slide';
-          nextSlide.className = 'nws-slide';
-          track.classList.remove('nws-track-3d');
+          if (page) {
+            page.classList.remove('page-flip-left', 'page-flip-right');
+          }
+          currentSlide.removeAttribute('style');
+          track.style.transition = '';
           
           nextSlide.scrollTop = 0;
           updateUI();
           isAnimating = false;
-        }, 700);
+        }, 750);
       } else {
         track.style.transform = `translateX(${idx * 100}%)`;
         updateUI();

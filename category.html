@@ -26,8 +26,8 @@
       <!-- View Toggle Bar -->
       <div class="view-toggle-bar" id="viewToggleBar" style="display: none;">
         <span style="font-size: 0.85rem; font-family: 'Cairo', sans-serif; color: #8B7E74;">عرض المقالات:</span>
-        <button id="btnGridView" class="view-toggle-btn active" title="عرض الشبكة"><i class="fa-solid fa-grip"></i> شبكة</button>
-        <button id="btnListView" class="view-toggle-btn" title="عرض القائمة"><i class="fa-solid fa-list"></i> قائمة</button>
+        <button id="btnGridView" class="view-toggle-btn" title="عرض الشبكة"><i class="fa-solid fa-grip"></i> شبكة</button>
+        <button id="btnListView" class="view-toggle-btn active" title="عرض القائمة"><i class="fa-solid fa-list"></i> قائمة</button>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;" id="postsGrid">
@@ -53,7 +53,7 @@
       const stripe = document.getElementById('sectionStripe');
       const toggleBar = document.getElementById('viewToggleBar');
 
-      let currentView = 'grid'; // default view
+      let currentView = 'list'; // default view
       let posts = [];
 
       function renderPostListRow(post) {
@@ -62,21 +62,18 @@
         const sectionColor = section?.color || '#1a1a1a';
         const rtime = readingTime(post.content);
         const dateStr = formatArabicDate(post.published_at || post.created_at);
-        const img = post.featured_image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
         const views = toArabicNumerals(getViewCount(post.id));
 
         return `
-          <article class="post-list-row">
-            <a href="article.html?id=${post.id}" class="post-list-row__img-link">
-              <img src="${img}" alt="${post.title}" class="post-list-row__img" loading="lazy">
-            </a>
+          <article class="post-list-row post-list-row--compact">
             <div class="post-list-row__content">
-              <span class="post-list-row__section" style="color:${sectionColor}">${sectionName}</span>
-              <h3 class="post-list-row__title">
+              <h3 class="post-list-row__title" style="font-size: 1.25rem; margin: 0; font-family:'Amiri',serif;">
+                <span style="color: ${sectionColor}; margin-left: 8px;">•</span>
                 <a href="article.html?id=${post.id}">${post.title}</a>
               </h3>
-              <p class="post-list-row__excerpt">${post.excerpt || (post.content ? post.content.replace(/<[^>]+>/g, '').substring(0, 180) + '...' : '')}</p>
-              <div class="post-list-row__meta">
+              <div class="post-list-row__meta" style="font-size: 0.75rem; margin-top: 4px; display: flex; gap: 8px; color: #8B7E74; font-family: 'Cairo', sans-serif;">
+                <span style="font-weight: bold; color: ${sectionColor};">${sectionName}</span>
+                <span class="post-list-row__sep">·</span>
                 <time>${dateStr}</time>
                 <span class="post-list-row__sep">·</span>
                 <span>${toArabicNumerals(rtime)} د قراءة</span>
@@ -107,7 +104,7 @@
           grid.removeAttribute('style');
           grid.style.display = 'flex';
           grid.style.flexDirection = 'column';
-          grid.style.gap = '1.5rem';
+          grid.style.gap = '0.5rem';
           grid.innerHTML = posts.map(p => renderPostListRow(p)).join('');
         }
       }
