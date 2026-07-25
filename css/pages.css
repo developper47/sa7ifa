@@ -1950,3 +1950,34 @@
     height: 200px;
   }
 }
+
+/* Compact text-only list rows for broadsheet style */
+.post-list-row--compact {
+  gap: 0;
+  background: none !important;
+  border: none !important;
+  border-bottom: 1px dashed #e2dccf !important;
+  padding: 0.5rem 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0.5rem !important;
+  align-items: center !important;
+}
+
+.post-list-row--compact:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #8B7E74 !important;
+  background: rgba(139, 126, 116, 0.03) !important;
+}
+
+.post-list-row--compact .post-list-row__title {
+  font-size: 1.25rem !important;
+  font-weight: 700;
+  margin-bottom: 0.25rem !important;
+}
+
+.post-list-row--compact .post-list-row__meta {
+  font-size: 0.75rem !important;
+  margin-top: 0 !important;
+}
