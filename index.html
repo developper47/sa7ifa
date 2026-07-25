@@ -271,6 +271,9 @@
     <!-- Magnifier Lens circular overlay -->
     <div class="magnifier-lens" id="magnifierLens"></div>
 
+    <!-- Floating Magnifier Close Button -->
+    <button id="floatingMagnifierClose" style="display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; background: #c0392b; color: #fff; border: 2px solid #fff; padding: 10px 20px; border-radius: 30px; font-family: 'Cairo', sans-serif; font-size: 0.9rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: all 0.2s;" title="إغلاق العدسة المكبرة">❌ إغلاق العدسة المكبرة</button>
+
     <!-- Navigation Arrows -->
     <button class="nws-arrow nws-arrow--prev" id="nwsPrev" aria-label="السابق">&#8250;</button>
     <button class="nws-arrow nws-arrow--next" id="nwsNext" aria-label="التالي">&#8249;</button>
@@ -1028,24 +1031,46 @@
       });
 
       let magnifierActive = false;
+
+      function closeMagnifier() {
+        magnifierActive = false;
+        const slider = document.getElementById('nwsSlider');
+        const btn = document.getElementById('magnifierToggle');
+        const lens = document.getElementById('magnifierLens');
+        const closeBtn = document.getElementById('floatingMagnifierClose');
+        
+        slider.classList.remove('magnifying-active');
+        if (btn) {
+          btn.style.background = 'none';
+          btn.style.color = '#F4F1EA';
+        }
+        if (lens) {
+          lens.style.display = 'none';
+          lens.innerHTML = '';
+        }
+        if (closeBtn) {
+          closeBtn.style.display = 'none';
+        }
+      }
+
       document.getElementById('magnifierToggle').addEventListener('click', function() {
         magnifierActive = !magnifierActive;
         const slider = document.getElementById('nwsSlider');
         const btn = document.getElementById('magnifierToggle');
         const lens = document.getElementById('magnifierLens');
+        const closeBtn = document.getElementById('floatingMagnifierClose');
         
         if (magnifierActive) {
           slider.classList.add('magnifying-active');
           btn.style.background = '#8B7E74';
           btn.style.color = '#000';
+          if (closeBtn) closeBtn.style.display = 'block';
         } else {
-          slider.classList.remove('magnifying-active');
-          btn.style.background = 'none';
-          btn.style.color = '#F4F1EA';
-          lens.style.display = 'none';
-          lens.innerHTML = '';
+          closeMagnifier();
         }
       });
+
+      document.getElementById('floatingMagnifierClose').addEventListener('click', closeMagnifier);
 
       document.getElementById('nwsSlider').addEventListener('mousemove', function(e) {
         if (!magnifierActive) return;
@@ -1059,8 +1084,8 @@
         const y = e.clientY - sliderRect.top;
 
         lens.style.display = 'block';
-        lens.style.left = `${x - 80}px`;
-        lens.style.top = `${y - 80}px`;
+        lens.style.left = `${x - 120}px`;
+        lens.style.top = `${y - 120}px`;
 
         let zoomedContent = lens.querySelector('.nws-page');
         if (!zoomedContent) {
@@ -1083,8 +1108,8 @@
           const pageRect = pageEl.getBoundingClientRect();
           const relX = e.clientX - pageRect.left;
           const relY = e.clientY - pageRect.top;
-          zoomedContent.style.left = `${-relX * 1.6 + 80}px`;
-          zoomedContent.style.top = `${-relY * 1.6 + 80}px`;
+          zoomedContent.style.left = `${-relX * 1.6 + 120}px`;
+          zoomedContent.style.top = `${-relY * 1.6 + 120}px`;
         }
       });
       
@@ -1214,6 +1239,27 @@
         }
       }
 
+      let cachedVoices = [];
+      function loadVoices() {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          cachedVoices = window.speechSynthesis.getVoices();
+        }
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        loadVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+          window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+      }
+
+      function getArabicVoice() {
+        const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis ? window.speechSynthesis.getVoices() : []);
+        return voices.find(v => v.lang === 'ar-SA') ||
+               voices.find(v => v.lang === 'ar-EG') ||
+               voices.find(v => v.lang.startsWith('ar') || v.lang.includes('ar')) ||
+               null;
+      }
+
       document.addEventListener('click', e => {
         const btn = e.target.closest('.radio-broadcast-btn');
         if (btn) {
@@ -1243,12 +1289,14 @@
           const speechText = `أهلاً بكم مستمعينا الأفاضل عبر أثير إذاعة الصحيفة. نستمع معاً إلى قراءة للمقال المعنون: ${post.title}، بقلم الكاتب: ${post.author_name || 'المحرر'}: \n\n ${cleanText} \n\n إلى هنا تنتهي قراءتنا الصوتية لهذا المقال، نشكركم على حسن المتابعة والإصغاء.`;
           
           const utterance = new SpeechSynthesisUtterance(speechText);
-          utterance.lang = 'ar-SA';
+          utterance.lang = 'ar';
           utterance.rate = 0.9;
           
-          const voices = window.speechSynthesis.getVoices();
-          const arVoice = voices.find(v => v.lang.includes('ar'));
-          if (arVoice) utterance.voice = arVoice;
+          const arVoice = getArabicVoice();
+          if (arVoice) {
+            utterance.voice = arVoice;
+            utterance.lang = arVoice.lang;
+          }
 
           utterance.onend = () => {
             stopRadioStatic();

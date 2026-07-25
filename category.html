@@ -23,6 +23,13 @@
         <p id="sectionDesc">تصفح أحدث التحليلات والمقالات</p>
       </header>
 
+      <!-- View Toggle Bar -->
+      <div class="view-toggle-bar" id="viewToggleBar" style="display: none;">
+        <span style="font-size: 0.85rem; font-family: 'Cairo', sans-serif; color: #8B7E74;">عرض المقالات:</span>
+        <button id="btnGridView" class="view-toggle-btn active" title="عرض الشبكة"><i class="fa-solid fa-grip"></i> شبكة</button>
+        <button id="btnListView" class="view-toggle-btn" title="عرض القائمة"><i class="fa-solid fa-list"></i> قائمة</button>
+      </div>
+
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;" id="postsGrid">
         <p class="text-center p-4" style="grid-column: 1/-1;">جارٍ تحميل المقالات...</p>
       </div>
@@ -30,8 +37,8 @@
   </main>
 
   <script type="module">
-    import { renderHeader, renderFooter, renderPostCard } from './js/main.js?v=3.2';
-    import { getPosts } from './js/posts.js?v=3.1';
+    import { renderHeader, renderFooter, renderPostCard, formatArabicDate, toArabicNumerals, getViewCount } from './js/main.js?v=3.2';
+    import { getPosts, readingTime } from './js/posts.js?v=3.1';
     import { getSectionBySlug } from './js/sections.js?v=3.1';
 
     (async () => {
@@ -39,33 +46,125 @@
 
       const params = new URLSearchParams(window.location.search);
       const sectionSlug = params.get('section');
+      const searchQuery = params.get('search');
       const grid = document.getElementById('postsGrid');
       const title = document.getElementById('sectionTitle');
+      const desc = document.getElementById('sectionDesc');
       const stripe = document.getElementById('sectionStripe');
+      const toggleBar = document.getElementById('viewToggleBar');
 
-      if (!sectionSlug) {
-        window.location.href = 'index.html';
-        return;
+      let currentView = 'grid'; // default view
+      let posts = [];
+
+      function renderPostListRow(post) {
+        const section = post.sections;
+        const sectionName = section?.name_ar || 'عام';
+        const sectionColor = section?.color || '#1a1a1a';
+        const rtime = readingTime(post.content);
+        const dateStr = formatArabicDate(post.published_at || post.created_at);
+        const img = post.featured_image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+        const views = toArabicNumerals(getViewCount(post.id));
+
+        return `
+          <article class="post-list-row">
+            <a href="article.html?id=${post.id}" class="post-list-row__img-link">
+              <img src="${img}" alt="${post.title}" class="post-list-row__img" loading="lazy">
+            </a>
+            <div class="post-list-row__content">
+              <span class="post-list-row__section" style="color:${sectionColor}">${sectionName}</span>
+              <h3 class="post-list-row__title">
+                <a href="article.html?id=${post.id}">${post.title}</a>
+              </h3>
+              <p class="post-list-row__excerpt">${post.excerpt || (post.content ? post.content.replace(/<[^>]+>/g, '').substring(0, 180) + '...' : '')}</p>
+              <div class="post-list-row__meta">
+                <time>${dateStr}</time>
+                <span class="post-list-row__sep">·</span>
+                <span>${toArabicNumerals(rtime)} د قراءة</span>
+                <span class="post-list-row__sep">·</span>
+                <span>◎ ${views} مشاهدة</span>
+              </div>
+            </div>
+          </article>
+        `;
       }
 
-      // 1. Fetch Section Info
-      const section = await getSectionBySlug(sectionSlug);
-      if (!section) {
-        title.textContent = 'القسم غير موجود';
-        grid.innerHTML = '';
-      } else {
-        title.textContent = section.name_ar;
-        document.title = `${section.name_ar} — الصحيفة`;
-        stripe.style.background = section.color;
-        
-        // 2. Fetch Posts for this section
-        const posts = await getPosts({ section_id: section.id, status: 'published' });
-        
-        if (posts.length > 0) {
+      function updatePostsDisplay() {
+        if (posts.length === 0) {
+          grid.innerHTML = '<p class="text-center p-4" style="grid-column: 1/-1; color: var(--ink-light);">لا توجد مقالات منشورة مطابقة للبحث.</p>';
+          toggleBar.style.display = 'none';
+          return;
+        }
+
+        toggleBar.style.display = 'flex';
+
+        if (currentView === 'grid') {
+          grid.removeAttribute('style');
+          grid.style.display = 'grid';
+          grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+          grid.style.gap = '2rem';
           grid.innerHTML = posts.map(p => renderPostCard(p)).join('');
         } else {
-          grid.innerHTML = '<p class="text-center p-4" style="grid-column: 1/-1; color: var(--ink-light);">لا توجد مقالات منشورة في هذا القسم بعد.</p>';
+          grid.removeAttribute('style');
+          grid.style.display = 'flex';
+          grid.style.flexDirection = 'column';
+          grid.style.gap = '1.5rem';
+          grid.innerHTML = posts.map(p => renderPostListRow(p)).join('');
         }
+      }
+
+      // Handle view toggles
+      document.getElementById('btnGridView').onclick = () => {
+        if (currentView === 'grid') return;
+        currentView = 'grid';
+        document.getElementById('btnGridView').classList.add('active');
+        document.getElementById('btnListView').classList.remove('active');
+        updatePostsDisplay();
+      };
+
+      document.getElementById('btnListView').onclick = () => {
+        if (currentView === 'list') return;
+        currentView = 'list';
+        document.getElementById('btnListView').classList.add('active');
+        document.getElementById('btnGridView').classList.remove('active');
+        updatePostsDisplay();
+      };
+
+      if (searchQuery) {
+        // --- 1. SEARCH MODE ---
+        title.textContent = 'نتائج البحث';
+        desc.textContent = `نتائج البحث عن: "${searchQuery}"`;
+        document.title = `البحث عن: ${searchQuery} — الصحيفة`;
+        stripe.style.background = 'var(--accent)';
+
+        const allPosts = await getPosts({ status: 'published' });
+        const cleanQuery = searchQuery.toLowerCase().trim();
+        posts = allPosts.filter(p => 
+          p.title.toLowerCase().includes(cleanQuery) || 
+          (p.content && p.content.toLowerCase().includes(cleanQuery)) || 
+          (p.excerpt && p.excerpt.toLowerCase().includes(cleanQuery))
+        );
+
+        updatePostsDisplay();
+
+      } else if (sectionSlug) {
+        // --- 2. CATEGORY MODE ---
+        const section = await getSectionBySlug(sectionSlug);
+        if (!section) {
+          title.textContent = 'القسم غير موجود';
+          grid.innerHTML = '';
+          toggleBar.style.display = 'none';
+        } else {
+          title.textContent = section.name_ar;
+          desc.textContent = section.description || 'تصفح أحدث التحليلات والمقالات';
+          document.title = `${section.name_ar} — الصحيفة`;
+          stripe.style.background = section.color;
+          
+          posts = await getPosts({ section_id: section.id, status: 'published' });
+          updatePostsDisplay();
+        }
+      } else {
+        window.location.href = 'index.html';
+        return;
       }
 
       renderFooter();
