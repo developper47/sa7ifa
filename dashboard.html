@@ -223,6 +223,9 @@
         <li class="nav-item">
           <a href="#settings" class="nav-link" id="navSettings"><span>⚙️</span> <span>إعدادات التسلية</span></a>
         </li>
+        <li class="nav-item">
+          <a href="#backup" class="nav-link" id="navBackup"><span>💾</span> <span>النسخ الاحتياطي</span></a>
+        </li>
       </div>
     </ul>
 
@@ -1108,6 +1111,126 @@
       };
     }
 
+    async function renderBackupView() {
+      viewTitle.textContent = 'النسخ الاحتياطي واستعادة البيانات';
+      viewContainer.innerHTML = `
+        <div style="max-width: 600px; font-family: 'Cairo', sans-serif;">
+          <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.4rem;">نسخ المقالات وتصديرها</h3>
+          <p style="font-size:0.95rem; color:#555; line-height:1.6; margin-bottom:1.5rem;">
+            يمكنك تحميل نسخة احتياطية كاملة من جميع المقالات والتدوينات الموجودة في قاعدة البيانات حالياً (بما في ذلك العناوين، المحتوى، الصور، التواريخ والأقسام) وحفظها محلياً بصيغة ملف <strong style="color:var(--dash-accent);">JSON</strong>.
+          </p>
+          <button class="btn btn-primary" id="btnExportBackup" style="margin-bottom:2.5rem;">
+            <span>💾</span> تصدير وتحميل النسخة الاحتياطية
+          </button>
+
+          <div style="border-top: 1px dashed #ccc; padding-top:2rem; margin-top:1.5rem;">
+            <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.4rem;">استيراد واستعادة المقالات</h3>
+            <p style="font-size:0.95rem; color:#555; line-height:1.6; margin-bottom:1.5rem;">
+              اختر ملف نسخة احتياطية بصيغة <strong style="color:var(--dash-accent);">JSON</strong> قمت بتحميله مسبقاً لاستيراد المقالات وإضافتها إلى الجريدة.
+            </p>
+            <div class="form-group" style="margin-bottom:1.5rem;">
+              <input type="file" id="importBackupFile" accept=".json" class="form-control" style="padding: 0.5rem;">
+            </div>
+            <button class="btn btn-outline" id="btnImportBackup" disabled>
+              <span>📂</span> تحميل واستعادة البيانات
+            </button>
+          </div>
+        </div>
+      `;
+
+      const fileInput = document.getElementById('importBackupFile');
+      const importBtn = document.getElementById('btnImportBackup');
+      fileInput.onchange = () => {
+        importBtn.disabled = !fileInput.files.length;
+      };
+
+      document.getElementById('btnExportBackup').onclick = async () => {
+        const btn = document.getElementById('btnExportBackup');
+        btn.disabled = true; btn.textContent = 'جاري تحضير البيانات...';
+        try {
+          const { data, error } = await supabase.from('posts').select('*');
+          if (error) throw error;
+          
+          const backup = {
+            backup_date: new Date().toISOString(),
+            posts: data || []
+          };
+          
+          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `sa7ifa_backup_${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('تم تصدير وتحميل النسخة الاحتياطية بنجاح');
+        } catch(e) {
+          showToast(e.message, 'error');
+        } finally {
+          btn.disabled = false; btn.innerHTML = '<span>💾</span> تصدير وتحميل النسخة الاحتياطية';
+        }
+      };
+
+      importBtn.onclick = async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        importBtn.disabled = true; importBtn.textContent = 'جاري القراءة...';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!data.posts || !Array.isArray(data.posts)) {
+              throw new Error('تنسيق ملف النسخة الاحتياطية غير صالح. يجب أن يحتوي على قائمة المقالات.');
+            }
+
+            importBtn.textContent = 'جاري فحص الأقسام...';
+            const sections = await getAllSections(true);
+            const activeSectionIds = sections.map(s => s.id);
+            const defaultSectionId = activeSectionIds.length > 0 ? activeSectionIds[0] : null;
+
+            importBtn.textContent = 'جاري استيراد المقالات...';
+            
+            const postsToInsert = data.posts.map(p => {
+              const postCopy = { ...p };
+              delete postCopy.id;
+              postCopy.slug = (postCopy.slug || 'imported-article') + '-' + Math.floor(Math.random() * 10000);
+              postCopy.author_id = user.id;
+              postCopy.author_name = user.name;
+              
+              if (postCopy.section_id && !activeSectionIds.includes(postCopy.section_id)) {
+                postCopy.section_id = defaultSectionId;
+              }
+              
+              postCopy.created_at = postCopy.created_at || new Date().toISOString();
+              postCopy.updated_at = new Date().toISOString();
+              postCopy.published_at = postCopy.published_at || new Date().toISOString();
+              
+              return postCopy;
+            });
+
+            if (postsToInsert.length === 0) {
+              throw new Error('الملف لا يحتوي على أي مقالات لاستيرادها.');
+            }
+
+            const { error: insErr } = await supabase.from('posts').insert(postsToInsert);
+            if (insErr) throw insErr;
+
+            showToast(`تم استعادة واستيراد ${postsToInsert.length} مقال بنجاح!`);
+            fileInput.value = '';
+            importBtn.disabled = true;
+          } catch(err) {
+            showToast(err.message, 'error');
+          } finally {
+            importBtn.disabled = false; importBtn.innerHTML = '<span>📂</span> تحميل واستعادة البيانات';
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
     async function renderSettingsView() {
       viewTitle.textContent = 'إعدادات صفحة التسلية والمنوعات';
       viewContainer.innerHTML = '<div class="text-center p-4"><strong>جاري تحميل الإعدادات...</strong></div>';
@@ -1252,6 +1375,11 @@
     const navSettings = document.getElementById('navSettings');
     if (navSettings) {
       navSettings.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSettingsView(); };
+    }
+
+    const navBackup = document.getElementById('navBackup');
+    if (navBackup) {
+      navBackup.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderBackupView(); };
     }
 
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); window.location.href = 'index.html'; };

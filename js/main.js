@@ -112,9 +112,7 @@ export async function renderHeader() {
     const href = `category.html?section=${s.slug}`;
     const isActive = currentPage === 'category.html' &&
       new URLSearchParams(window.location.search).get('section') === s.slug ? 'active' : '';
-    // Use neutral, non-AI icons
-    const neutralIcon = getNeutralIcon(s.slug);
-    return `<li><a href="${href}" class="${isActive}" data-section="${s.slug}">${neutralIcon} ${s.name_ar}</a></li>`;
+    return `<li><a href="${href}" class="${isActive}" data-section="${s.slug}">${s.name_ar}</a></li>`;
   }).join('');
 
   const isHome = (currentPage === 'index.html' || currentPage === '');
@@ -168,6 +166,10 @@ export async function renderHeader() {
           </ul>
 
           <div class="utility-actions" style="display: flex; gap: 1rem; align-items: center; margin-right: auto; margin-left: 0;">
+            <form id="navSearchForm" style="display: flex; align-items: center; background: #FAF7F0; border: 1px solid #8B7E74; border-radius: 3px; padding: 2px 6px; font-family: 'Cairo', sans-serif; font-size: 0.75rem; direction: rtl; margin-left: 1rem;">
+              <input type="text" id="navSearchInput" placeholder="بحث في المقالات..." style="border: none; background: none; outline: none; font-size: 0.75rem; font-family: inherit; color: #2B2B2B; width: 130px; padding: 0 4px;">
+              <button type="submit" style="background: none; border: none; cursor: pointer; color: #8B7E74; padding: 0 4px; font-size: 0.8rem;"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
             ${userActionsHTML}
           </div>
         </div>
@@ -183,9 +185,15 @@ export async function renderHeader() {
         <h2 style="font-family: var(--font-serif); color: var(--paper); margin: 0;">الصحيفة</h2>
         <button class="mobile-close-btn" id="mobileCloseBtn">&times;</button>
       </div>
+      <div style="padding: 1rem 1.5rem;">
+        <form id="mobileNavSearchForm" style="display: flex; align-items: center; background: #FAF7F0; border: 1px solid #8B7E74; border-radius: 4px; padding: 6px 12px; font-family: 'Cairo', sans-serif; font-size: 0.85rem; direction: rtl; width: 100%; box-sizing: border-box;">
+          <input type="text" id="mobileNavSearchInput" placeholder="بحث في المقالات..." style="border: none; background: none; outline: none; font-size: 0.85rem; font-family: inherit; color: #2B2B2B; width: 100%; padding: 0 4px;">
+          <button type="submit" style="background: none; border: none; cursor: pointer; color: #8B7E74; padding: 0 4px; font-size: 0.95rem;"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+      </div>
       <ul class="mobile-nav-links">
         <li><a href="index.html">الرئيسية</a></li>
-        ${sections.filter(s => s.slug !== 'home').map(s => `<li><a href="category.html?section=${s.slug}">${getNeutralIcon(s.slug)} ${s.name_ar}</a></li>`).join('')}
+        ${sections.filter(s => s.slug !== 'home').map(s => `<li><a href="category.html?section=${s.slug}">${s.name_ar}</a></li>`).join('')}
         <li><a href="index.html?tools=true" id="mobileNavbarToolsBtn" class="mobile-nav-tools-link" style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-sliders"></i> أدوات</a></li>
         <li><a href="about.html">عن الصحيفة</a></li>
       </ul>
@@ -275,6 +283,25 @@ export async function renderHeader() {
 
   document.getElementById('navbarToolsBtn')?.addEventListener('click', toggleTools);
   document.getElementById('mobileNavbarToolsBtn')?.addEventListener('click', toggleTools);
+
+  // Search form submit handlers
+  const handleSearchSubmit = (query) => {
+    if (query) {
+      window.location.href = `category.html?search=${encodeURIComponent(query)}`;
+    }
+  };
+
+  document.getElementById('navSearchForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const query = document.getElementById('navSearchInput').value.trim();
+    handleSearchSubmit(query);
+  });
+
+  document.getElementById('mobileNavSearchForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const query = document.getElementById('mobileNavSearchInput').value.trim();
+    handleSearchSubmit(query);
+  });
 }
 
 /**
