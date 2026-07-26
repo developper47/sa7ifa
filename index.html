@@ -449,7 +449,7 @@
               <!-- Right Metadata Box -->
               <div class="masthead-col masthead-col-right headline-font text-right" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: center; color: #2B2B2B;">
                 <span>مرحبا بك</span>
-                <span>جريدة مستقلة للفكر الحر</span>
+                <span>جريدة مستقلة للفكر المستنير</span>
                 <span>تأسست عام 2026 م</span>
               </div>
               
@@ -1249,6 +1249,7 @@
       }
 
       let cachedVoices = [];
+      let currentTTSPlayer = null;
       function loadVoices() {
         if (typeof window !== 'undefined' && window.speechSynthesis) {
           cachedVoices = window.speechSynthesis.getVoices();
@@ -1269,6 +1270,146 @@
                null;
       }
 
+      function playArabicTextTTS(text, onStart, onEnd, onError) {
+        const maxChunkLen = 180;
+        const rawChunks = [];
+        
+        // Split text by Arabic and general punctuation to get natural pauses
+        const parts = text.split(/([،؛.؟\n]+)/);
+        
+        let currentChunk = "";
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (!part) continue;
+          if (currentChunk.length + part.length > maxChunkLen) {
+            if (currentChunk.trim()) {
+              rawChunks.push(currentChunk.trim());
+            }
+            currentChunk = part;
+          } else {
+            currentChunk += part;
+          }
+        }
+        if (currentChunk.trim()) {
+          rawChunks.push(currentChunk.trim());
+        }
+
+        const chunks = [];
+        for (let chunk of rawChunks) {
+          while (chunk.length > maxChunkLen) {
+            let splitIdx = chunk.lastIndexOf(' ', maxChunkLen);
+            if (splitIdx === -1 || splitIdx === 0) splitIdx = maxChunkLen;
+            chunks.push(chunk.substring(0, splitIdx).trim());
+            chunk = chunk.substring(splitIdx).trim();
+          }
+          if (chunk.trim()) {
+            chunks.push(chunk.trim());
+          }
+        }
+
+        if (chunks.length === 0) {
+          onEnd();
+          return null;
+        }
+
+        let chunkIndex = 0;
+        let audio = null;
+        let cancelled = false;
+
+        function playNext() {
+          if (cancelled) return;
+          if (chunkIndex >= chunks.length) {
+            onEnd();
+            return;
+          }
+
+          const txt = chunks[chunkIndex];
+          const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(txt)}`;
+          
+          audio = new Audio(url);
+          audio.onplay = () => {
+            if (chunkIndex === 0 && onStart) {
+              onStart();
+            }
+          };
+          audio.onended = () => {
+            chunkIndex++;
+            playNext();
+          };
+          audio.onerror = (err) => {
+            console.warn("Google TTS chunk failed, falling back to SpeechSynthesis", err);
+            if (audio) {
+              audio.pause();
+              audio = null;
+            }
+            useSpeechSynthesisFallback();
+          };
+
+          audio.play().catch(err => {
+            console.warn("Audio play blocked/failed, falling back to SpeechSynthesis", err);
+            useSpeechSynthesisFallback();
+          });
+        }
+
+        function useSpeechSynthesisFallback() {
+          if (cancelled) return;
+          const remainingText = chunks.slice(chunkIndex).join(" ");
+          if (!remainingText.trim()) {
+            onEnd();
+            return;
+          }
+
+          try {
+            const utterance = new SpeechSynthesisUtterance(remainingText);
+            utterance.lang = 'ar';
+            utterance.rate = 0.9;
+            
+            const arVoice = getArabicVoice();
+            if (arVoice) {
+              utterance.voice = arVoice;
+              utterance.lang = arVoice.lang;
+            }
+
+            utterance.onstart = () => {
+              if (chunkIndex === 0 && onStart) onStart();
+            };
+            utterance.onend = () => {
+              onEnd();
+            };
+            utterance.onerror = (e) => {
+              console.error("SpeechSynthesis error:", e);
+              onError();
+            };
+
+            window.speechSynthesis.speak(utterance);
+            
+            playerInstance.cancel = () => {
+              cancelled = true;
+              window.speechSynthesis.cancel();
+            };
+          } catch(e) {
+            console.error("Fallback SpeechSynthesis failed:", e);
+            onError();
+          }
+        }
+
+        playNext();
+
+        const playerInstance = {
+          cancel: () => {
+            cancelled = true;
+            if (audio) {
+              try { audio.pause(); } catch(e){}
+              audio = null;
+            }
+            if (window.speechSynthesis) {
+              try { window.speechSynthesis.cancel(); } catch(e){}
+            }
+          }
+        };
+        return playerInstance;
+      }
+
       document.addEventListener('click', e => {
         const btn = e.target.closest('.radio-broadcast-btn');
         if (btn) {
@@ -1278,7 +1419,10 @@
           if (!post) return;
 
           if (isSpeaking) {
-            window.speechSynthesis.cancel();
+            if (currentTTSPlayer) {
+              currentTTSPlayer.cancel();
+              currentTTSPlayer = null;
+            }
             stopRadioStatic();
             isSpeaking = false;
             document.querySelectorAll('.radio-broadcast-btn').forEach(b => {
@@ -1296,32 +1440,25 @@
 
           const cleanText = (post.content || post.excerpt || '').replace(/<[^>]+>/g, '').trim();
           const speechText = `أهلاً بكم مستمعينا الأفاضل عبر أثير إذاعة الصحيفة. نستمع معاً إلى قراءة للمقال المعنون: ${post.title}، بقلم الكاتب: ${post.author_name || 'المحرر'}: \n\n ${cleanText} \n\n إلى هنا تنتهي قراءتنا الصوتية لهذا المقال، نشكركم على حسن المتابعة والإصغاء.`;
-          
-          const utterance = new SpeechSynthesisUtterance(speechText);
-          utterance.lang = 'ar';
-          utterance.rate = 0.9;
-          
-          const arVoice = getArabicVoice();
-          if (arVoice) {
-            utterance.voice = arVoice;
-            utterance.lang = arVoice.lang;
-          }
 
-          utterance.onend = () => {
-            stopRadioStatic();
-            isSpeaking = false;
-            btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
-            btn.style.color = '#8B7E74';
-          };
-
-          utterance.onerror = () => {
-            stopRadioStatic();
-            isSpeaking = false;
-            btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
-            btn.style.color = '#8B7E74';
-          };
-
-          window.speechSynthesis.speak(utterance);
+          currentTTSPlayer = playArabicTextTTS(
+            speechText,
+            () => {},
+            () => {
+              stopRadioStatic();
+              isSpeaking = false;
+              btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
+              btn.style.color = '#8B7E74';
+              currentTTSPlayer = null;
+            },
+            () => {
+              stopRadioStatic();
+              isSpeaking = false;
+              btn.innerHTML = '<i class="fa-solid fa-radio" style="font-size:0.8rem; margin-left: 3px;"></i> راديو';
+              btn.style.color = '#8B7E74';
+              currentTTSPlayer = null;
+            }
+          );
         }
       });
 
