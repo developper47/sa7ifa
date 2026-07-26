@@ -158,10 +158,10 @@ export async function renderHeader() {
             <span style="background: #2b2b2b; display: block; width: 24px; height: 2px; border-radius: 2px;"></span>
           </button>
           
-          <ul class="nav-links-broadsheet" id="navLinks" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; flex-grow: 1; justify-content: center;">
+          <ul class="nav-links-broadsheet" id="navLinks" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; flex-grow: 1; justify-content: center; align-items: center;">
+            <li><a href="index.html?tools=true" id="navbarToolsBtn" title="أدوات" style="display: flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1;"><i class="fa-solid fa-sliders"></i></a></li>
             <li><a href="index.html" ${isHome ? 'class="active"' : ''}>الرئيسية</a></li>
             ${sectionLinks}
-            <li><a href="index.html?tools=true" id="navbarToolsBtn" style="display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-sliders"></i> أدوات</a></li>
             <li><a href="about.html" ${currentPage === 'about.html' ? 'class="active"' : ''}>عن الصحيفة</a></li>
           </ul>
 
