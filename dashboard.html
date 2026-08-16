@@ -208,6 +208,9 @@
       <li class="nav-item">
         <a href="#" class="nav-link" id="navPassword"><span>🔑</span> <span>تغيير كلمة المرور</span></a>
       </li>
+      <li class="nav-item">
+        <a href="#database" class="nav-link" id="navDatabase"><span>⚙️</span> <span>إعدادات قاعدة البيانات</span></a>
+      </li>
       
       <div id="adminNav" style="display: none;">
         <div class="nav-label">الإدارة</div>
@@ -263,6 +266,12 @@
     import { supabase } from './js/supabase.js?v=3.1';
 
     let user = null;
+    let currentFilters = {
+      search: '',
+      author: 'all',
+      section: 'all',
+      date: ''
+    };
 
     async function init() {
       user = await getCurrentUser();
@@ -302,7 +311,7 @@
         return;
       }
 
-      renderPostsView();
+      handleHashRoute();
     }
 
     const modalOverlay = document.getElementById('modalOverlay');
@@ -345,15 +354,15 @@
             <!-- Title Search -->
             <div style="flex: 1; min-width: 200px;">
               <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem;">البحث في العنوان</label>
-              <input type="text" id="filterSearch" class="form-control" placeholder="اكتب للبحث..." style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+              <input type="text" id="filterSearch" class="form-control" placeholder="اكتب للبحث..." style="padding: 0.4rem 0.8rem; font-size: 0.9rem;" value="${currentFilters.search}">
             </div>
             
             <!-- Author Filter -->
             <div style="width: 180px;">
               <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem;">الكاتب</label>
               <select id="filterAuthor" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; background: white; height: 38px;">
-                <option value="all">كل الكتاب</option>
-                ${uniqueAuthors.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+                <option value="all" ${currentFilters.author === 'all' ? 'selected' : ''}>كل الكتاب</option>
+                ${uniqueAuthors.map(a => `<option value="${a.id}" ${currentFilters.author === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
               </select>
             </div>
 
@@ -361,15 +370,15 @@
             <div style="width: 180px;">
               <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem;">القسم</label>
               <select id="filterSection" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; background: white; height: 38px;">
-                <option value="all">كل الأقسام</option>
-                ${sections.map(s => `<option value="${s.id}">${s.name_ar}</option>`).join('')}
+                <option value="all" ${currentFilters.section === 'all' ? 'selected' : ''}>كل الأقسام</option>
+                ${sections.map(s => `<option value="${s.id}" ${currentFilters.section === s.id ? 'selected' : ''}>${s.name_ar}</option>`).join('')}
               </select>
             </div>
 
             <!-- Date Filter -->
             <div style="width: 180px;">
               <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem;">التاريخ</label>
-              <input type="date" id="filterDate" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; height: 38px;">
+              <input type="date" id="filterDate" class="form-control" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; height: 38px;" value="${currentFilters.date}">
             </div>
             
             <!-- Reset Button -->
@@ -428,6 +437,13 @@
           const sectionId = filterSection.value;
           const selectedDate = filterDate.value; // YYYY-MM-DD
           
+          currentFilters = {
+            search: filterSearch.value,
+            author: authorId,
+            section: sectionId,
+            date: selectedDate
+          };
+          
           const items = postsList.querySelectorAll('.list-item');
           let count = 0;
           
@@ -466,6 +482,7 @@
           filterAuthor.value = 'all';
           filterSection.value = 'all';
           filterDate.value = '';
+          currentFilters = { search: '', author: 'all', section: 'all', date: '' };
           applyFilters();
         };
 
@@ -493,6 +510,8 @@
             } catch (err) { showToast(err.message, 'error'); }
           };
         });
+        
+        applyFilters();
       } catch (err) { viewContainer.innerHTML = `<p>فشل التحميل: ${err.message}</p>`; }
     }
 
@@ -1344,9 +1363,7 @@
         btn.disabled = true; btn.textContent = 'جاري التحديث...';
         
         try {
-          const res = await updatePassword(newPass);
-          if (!res.success) throw new Error(res.message || 'فشل تحديث كلمة المرور');
-          
+          await updatePassword(newPass);
           showToast('تم تغيير كلمة المرور بنجاح');
           document.getElementById('changePasswordForm').reset();
         } catch (err) {
@@ -1357,29 +1374,178 @@
       };
     }
 
-    // --- NAV ---
+    // --- VIEW: DATABASE SETTINGS ---
+    async function renderDatabaseView() {
+      viewTitle.textContent = 'إعدادات قاعدة البيانات';
+      viewContainer.innerHTML = '<div class="text-center p-4"><strong>جاري تحميل الإعدادات...</strong></div>';
+      
+      const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
+      const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
+      
+      let configUrl = '';
+      let configKey = '';
+      try {
+        const configModule = await import('./js/config.js?v=' + Date.now());
+        configUrl = configModule.SUPABASE_URL || '';
+        configKey = configModule.SUPABASE_ANON_KEY || '';
+      } catch (e) {}
+
+      const activeUrl = configUrl || localUrl;
+      const activeKey = configKey || localKey;
+      const isConfigStatic = !!(configUrl && configKey);
+
+      viewContainer.innerHTML = `
+        <div style="max-width: 650px;">
+          <div style="margin-bottom: 2rem; padding: 1rem; border-radius: 8px; background: #f8f9fa; border: 1px solid #e9ecef;">
+            <h3 style="font-family:'Amiri',serif; margin-top:0; margin-bottom:0.5rem; color:var(--dash-accent);">حالة قاعدة البيانات الحالية</h3>
+            <p style="margin:0 0 0.5rem 0; font-size:0.95rem;">
+              نوع الاتصال الحالي: 
+              <strong style="color: ${activeUrl ? '#27ae60' : '#d35400'}; font-weight: bold;">
+                ${activeUrl ? 'سحابي (Supabase Real DB)' : 'محلي مؤقت (Offline Mock DB - LocalStorage)'}
+              </strong>
+            </p>
+            ${activeUrl ? `
+              <p style="margin:0; font-size:0.85rem; color:#666; word-break:break-all;">
+                رابط المشروع النشط: <code>${activeUrl}</code>
+              </p>
+            ` : `
+              <p style="margin:0; font-size:0.85rem; color:#e67e22;">
+                ⚠️ تنبيه: المقالات التي تنشئها الآن تُحفظ فقط في متصفحك الحالي، ولن تظهر على الأجهزة الأخرى أو المتصفحات الأخرى. للربط بقاعدة بيانات مشتركة، يرجى إدخال بيانات Supabase أدناه.
+              </p>
+            `}
+          </div>
+
+          <form id="dbSettingsForm">
+            <h3 style="font-family:'Amiri',serif; margin-bottom:1rem; color:var(--dash-accent); font-size:1.2rem;">تكوين Supabase Cloud Database</h3>
+            
+            ${isConfigStatic ? `
+              <div style="padding:0.75rem 1rem; border-radius:6px; background:#e8f4fd; color:#2b82c9; border:1px solid #d0e7f9; font-size:0.85rem; margin-bottom:1.5rem;">
+                ℹ️ تم تكوين قاعدة البيانات بشكل ثابت في ملف <code>js/config.js</code>. لا يمكنك تعديل الإعدادات من هنا.
+              </div>
+            ` : ''}
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label">رابط مشروع Supabase (Project URL)</label>
+              <input type="url" class="form-control" id="dbUrl" value="${localUrl}" placeholder="https://xxxxxx.supabase.co" ${isConfigStatic ? 'disabled' : ''}>
+              <small style="color:#666; font-size:0.8rem; display:block; margin-top:0.25rem;">تجد الرابط في لوحة تحكم Supabase تحت Settings > API</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label">مفتاح API العام (Anon API Key)</label>
+              <input type="text" class="form-control" id="dbKey" value="${localKey}" placeholder="eyJhbGciOi..." ${isConfigStatic ? 'disabled' : ''}>
+              <small style="color:#666; font-size:0.8rem; display:block; margin-top:0.25rem;">مفتاح Anon العام للاتصال من المتصفح</small>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-top:2rem;">
+              <button type="submit" class="btn btn-primary" id="saveDbBtn" ${isConfigStatic ? 'disabled' : ''}>حفظ وتفعيل الاتصال</button>
+              ${localUrl || localKey ? `
+                <button type="button" class="btn btn-outline" id="clearDbBtn" style="color:var(--accent); border-color:var(--accent);">حذف الاتصال والعودة للوضع المحلي</button>
+              ` : ''}
+            </div>
+          </form>
+        </div>
+      `;
+
+      if (!isConfigStatic) {
+        document.getElementById('dbSettingsForm').onsubmit = (e) => {
+          e.preventDefault();
+          const url = document.getElementById('dbUrl').value.trim();
+          const key = document.getElementById('dbKey').value.trim();
+
+          if (!url || !key) {
+            showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
+          }
+
+          localStorage.setItem('sa7ifa_supabase_url', url);
+          localStorage.setItem('sa7ifa_supabase_key', key);
+          showToast('تم حفظ الاتصال وتحديث الإعدادات. سيتم إعادة تحميل الصفحة للتفعيل.');
+          setTimeout(() => window.location.reload(), 1500);
+        };
+
+        const clearBtn = document.getElementById('clearDbBtn');
+        if (clearBtn) {
+          clearBtn.onclick = () => {
+            if (confirm('هل أنت متأكد من رغبتك في حذف إعدادات الاتصال السحابي والعودة للوضع المحلي المؤقت؟')) {
+              localStorage.removeItem('sa7ifa_supabase_url');
+              localStorage.removeItem('sa7ifa_supabase_key');
+              showToast('تم حذف الاتصال والعودة للمحلي. سيتم إعادة تحميل الصفحة.');
+              setTimeout(() => window.location.reload(), 1500);
+            }
+          };
+        }
+      }
+    }
+
+    // --- NAV & ROUTING ---
     const navLinks = document.querySelectorAll('.nav-link');
     const resetNav = () => navLinks.forEach(l => l.classList.remove('active'));
 
-    document.getElementById('navPosts').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(); };
-    document.getElementById('navSections').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSectionsView(); };
+    function handleHashRoute() {
+      const hash = window.location.hash || '#posts';
+      resetNav();
+      
+      if (hash === '#sections') {
+        const link = document.getElementById('navSections');
+        if (link) link.classList.add('active');
+        renderSectionsView();
+      } else if (hash === '#users') {
+        const link = document.getElementById('navUsers');
+        if (link) link.classList.add('active');
+        renderUsersView();
+      } else if (hash === '#moderate') {
+        const link = document.getElementById('navModerate');
+        if (link) link.classList.add('active');
+        renderPostsView(true);
+      } else if (hash === '#settings') {
+        const link = document.getElementById('navSettings');
+        if (link) link.classList.add('active');
+        renderSettingsView();
+      } else if (hash === '#backup') {
+        const link = document.getElementById('navBackup');
+        if (link) link.classList.add('active');
+        renderBackupView();
+      } else if (hash === '#password') {
+        const link = document.getElementById('navPassword');
+        if (link) link.classList.add('active');
+        renderPasswordView();
+      } else if (hash === '#database') {
+        const link = document.getElementById('navDatabase');
+        if (link) link.classList.add('active');
+        renderDatabaseView();
+      } else {
+        const link = document.getElementById('navPosts');
+        if (link) link.classList.add('active');
+        renderPostsView();
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashRoute);
+
+    document.getElementById('navPosts').onclick = (e) => { e.preventDefault(); window.location.hash = '#posts'; };
+    document.getElementById('navSections').onclick = (e) => { e.preventDefault(); window.location.hash = '#sections'; };
     
     const navUsers = document.getElementById('navUsers');
     if (navUsers) {
-      navUsers.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderUsersView(); };
+      navUsers.onclick = (e) => { e.preventDefault(); window.location.hash = '#users'; };
     }
     
-    document.getElementById('navModerate').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPostsView(true); };
-    document.getElementById('navPassword').onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderPasswordView(); };
+    document.getElementById('navModerate').onclick = (e) => { e.preventDefault(); window.location.hash = '#moderate'; };
+    document.getElementById('navPassword').onclick = (e) => { e.preventDefault(); window.location.hash = '#password'; };
     
     const navSettings = document.getElementById('navSettings');
     if (navSettings) {
-      navSettings.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderSettingsView(); };
+      navSettings.onclick = (e) => { e.preventDefault(); window.location.hash = '#settings'; };
     }
 
     const navBackup = document.getElementById('navBackup');
     if (navBackup) {
-      navBackup.onclick = (e) => { e.preventDefault(); resetNav(); e.currentTarget.classList.add('active'); renderBackupView(); };
+      navBackup.onclick = (e) => { e.preventDefault(); window.location.hash = '#backup'; };
+    }
+
+    const navDatabase = document.getElementById('navDatabase');
+    if (navDatabase) {
+      navDatabase.onclick = (e) => { e.preventDefault(); window.location.hash = '#database'; };
     }
 
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); window.location.href = 'index.html'; };

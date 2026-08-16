@@ -3,6 +3,30 @@
 // Resolves DNS/connection issues by running fully in-browser.
 // ============================================================
 
+import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.2';
+
+const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
+const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
+
+const supabaseUrl = configUrl || localUrl;
+const supabaseKey = configKey || localKey;
+
+let supabaseClient = null;
+
+if (supabaseUrl && supabaseKey) {
+  try {
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } else {
+      const module = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      supabaseClient = module.createClient(supabaseUrl, supabaseKey);
+    }
+    console.log("Using real Supabase database:", supabaseUrl);
+  } catch (err) {
+    console.error("Failed to initialize real Supabase client:", err);
+  }
+}
+
 const SECTIONS_SEED = [
   {
     id: "home",
@@ -648,9 +672,11 @@ const mockAuth = {
   }
 };
 
-export const supabase = {
+const mockSupabase = {
   auth: mockAuth,
   from(table) {
     return new SupabaseQueryBuilder(table);
   }
 };
+
+export const supabase = supabaseClient || mockSupabase;
