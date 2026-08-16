@@ -513,7 +513,6 @@
                   
                   <div class="mb-3">
                     <img src="${p1.featured_image_url || FALLBACK}" alt="${p1.title}" class="aspect-16-9 vintage-image">
-                    <span class="block text-center mt-1 opacity-70" style="display: block; font-size: 0.65rem; font-style: italic;">ورشة الصحافة في عصر الحداثة والتحول التمويلي</span>
                   </div>
                   
                   <p class="text-sm text-justify" style="line-height: 1.6;">
@@ -986,8 +985,23 @@
       }
 
       // Arrow events
-      document.getElementById('nwsPrev').addEventListener('click', () => goTo(current - 1));
-      document.getElementById('nwsNext').addEventListener('click', () => goTo(current + 1));
+      const prevBtn = document.getElementById('nwsPrev');
+      const nextBtn = document.getElementById('nwsNext');
+
+      const handlePrev = (e) => {
+        e.preventDefault();
+        goTo(current - 1);
+      };
+      const handleNext = (e) => {
+        e.preventDefault();
+        goTo(current + 1);
+      };
+
+      prevBtn.addEventListener('click', handlePrev);
+      prevBtn.addEventListener('touchend', handlePrev);
+
+      nextBtn.addEventListener('click', handleNext);
+      nextBtn.addEventListener('touchend', handleNext);
 
       // Keyboard navigation
       document.addEventListener('keydown', e => {
