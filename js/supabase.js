@@ -3,13 +3,18 @@
 // Resolves DNS/connection issues by running fully in-browser.
 // ============================================================
 
-import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.5';
+import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.6';
 
 const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
 const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
 
-const supabaseUrl = configUrl || localUrl;
+let supabaseUrl = configUrl || localUrl;
 const supabaseKey = configKey || localKey;
+
+if (supabaseUrl) {
+  // Clean up URL: remove trailing slashes and /rest/v1 if present
+  supabaseUrl = supabaseUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+}
 
 let supabaseClient = null;
 
