@@ -27,6 +27,27 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
+-- Trigger to prevent privilege escalation via profiles.role modification
+CREATE OR REPLACE FUNCTION public.check_profile_role()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.role <> OLD.role AND NOT (
+    EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  ) THEN
+    RAISE EXCEPTION 'Seuls les administrateurs peuvent modifier le rôle des profils.';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER before_profile_update_role
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.check_profile_role();
+
 -- 2. SECTIONS: Editorial Categories
 CREATE TABLE IF NOT EXISTS public.sections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -69,7 +90,7 @@ ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Published posts viewable by everyone" ON public.posts FOR SELECT USING (status = 'published');
 CREATE POLICY "Authors can view all their posts" ON public.posts FOR SELECT USING (auth.uid() = author_id);
 CREATE POLICY "Admins can view all posts" ON public.posts FOR SELECT USING (is_admin());
-CREATE POLICY "Users can create posts" ON public.posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+CREATE POLICY "Users can create posts" ON public.posts FOR INSERT WITH CHECK (auth.uid() = author_id AND (status IN ('draft', 'pending') OR is_admin()));
 CREATE POLICY "Authors can update their own drafts/pending" ON public.posts FOR UPDATE 
   USING (auth.uid() = author_id AND (status IN ('draft', 'pending', 'needs_revision')));
 CREATE POLICY "Admins can manage all posts" ON public.posts FOR UPDATE USING (is_admin());
@@ -89,7 +110,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
 
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Comments viewable by everyone" ON public.comments FOR SELECT USING (status = 'approved');
-CREATE POLICY "Authenticated users can post comments" ON public.comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can post comments" ON public.comments FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Admins can moderate comments" ON public.comments FOR ALL USING (is_admin());
 
 -- 5. SITE SETTINGS: Global Configs

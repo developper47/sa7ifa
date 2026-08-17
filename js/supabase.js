@@ -3,7 +3,7 @@
 // Resolves DNS/connection issues by running fully in-browser.
 // ============================================================
 
-import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.2';
+import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.5';
 
 const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
 const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
