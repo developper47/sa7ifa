@@ -3,7 +3,7 @@
  * Manages editorial categories dynamically from the database.
  */
 
-import { supabase } from './supabase.js?v=3.5';
+import { supabase } from './supabase.js?v=3.6';
 
 let _sectionsCache = null;
 
