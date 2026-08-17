@@ -106,32 +106,11 @@
 
     <div style="text-align:center; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
       <a href="index.html" style="color: var(--ink-light); font-size: 0.82rem;">العودة إلى الصفحة الرئيسية</a>
-      <button id="toggleDbConfigBtn" style="background:none; border:none; color:var(--accent); font-family:inherit; font-size:0.82rem; cursor:pointer; font-weight:600; text-decoration:underline;">⚙️ إعدادات قاعدة البيانات السحابية</button>
-    </div>
-
-    <!-- DB Config Form (Hidden by default) -->
-    <div id="dbConfigSection" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:1px dashed var(--ink-faint); text-align:right;">
-      <h3 style="font-family:'Amiri', serif; font-size:1.1rem; margin-bottom:1rem; text-align:center;">إعدادات الاتصال بقاعدة البيانات</h3>
-      <div class="form-group">
-        <label class="form-label" style="font-size:0.8rem;">رابط Supabase (Project URL)</label>
-        <input type="url" class="form-control" id="dbUrl" style="padding:0.4rem 0.6rem; font-size:0.85rem;" placeholder="https://xxxxxx.supabase.co">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="font-size:0.8rem;">مفتاح API العام (Anon API Key)</label>
-        <input type="text" class="form-control" id="dbKey" style="padding:0.4rem 0.6rem; font-size:0.85rem;" placeholder="eyJhbGciOi...">
-      </div>
-      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-        <button type="button" class="btn btn-primary" id="saveDbBtn" style="flex:1; padding:0.4rem; font-size:0.85rem;">حفظ وتفعيل</button>
-        <button type="button" class="btn btn-outline" id="clearDbBtn" style="padding:0.4rem; font-size:0.85rem; color:var(--accent); border-color:var(--accent); display:none;">حذف</button>
-      </div>
-      <p style="font-size:0.75rem; color:#888; text-align:center; margin-top:0.5rem; line-height:1.3;">
-        عند الربط بقاعدة بيانات سحابية، سيقوم المتصفح بقراءة وحفظ المقالات والمستخدمين من قاعدة البيانات السحابية المشتركة.
-      </p>
     </div>
   </main>
 
   <script type="module">
-    import { signIn, signUp, getCurrentUser, sendPasswordResetEmail, updatePassword } from './js/auth.js?v=3.1';
+    import { signIn, signUp, getCurrentUser, sendPasswordResetEmail, updatePassword } from './js/auth.js?v=3.5';
 
     (async () => {
       const loginTab = document.getElementById('loginTab');
@@ -338,65 +317,7 @@
         }
       };
 
-      // Database Config Toggle logic
-      const toggleDbBtn = document.getElementById('toggleDbConfigBtn');
-      const dbConfigSection = document.getElementById('dbConfigSection');
-      const dbUrlInput = document.getElementById('dbUrl');
-      const dbKeyInput = document.getElementById('dbKey');
-      const saveDbBtn = document.getElementById('saveDbBtn');
-      const clearDbBtn = document.getElementById('clearDbBtn');
 
-      // Check if DB configuration is statically defined in config.js
-      let configStatic = false;
-      try {
-        const configModule = await import('./js/config.js?v=' + Date.now());
-        if (configModule.SUPABASE_URL && configModule.SUPABASE_ANON_KEY) {
-          configStatic = true;
-        }
-      } catch(e){}
-
-      if (configStatic) {
-        if (toggleDbBtn) toggleDbBtn.style.display = 'none';
-      } else {
-        const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
-        const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
-        if (dbUrlInput) dbUrlInput.value = localUrl;
-        if (dbKeyInput) dbKeyInput.value = localKey;
-        if (localUrl || localKey) {
-          if (clearDbBtn) clearDbBtn.style.display = 'block';
-        }
-
-        if (toggleDbBtn) {
-          toggleDbBtn.onclick = () => {
-            const isHidden = dbConfigSection.style.display === 'none';
-            dbConfigSection.style.display = isHidden ? 'block' : 'none';
-          };
-        }
-
-        if (saveDbBtn) {
-          saveDbBtn.onclick = () => {
-            const url = dbUrlInput.value.trim();
-            const key = dbKeyInput.value.trim();
-            if (!url || !key) {
-              alert('يرجى تعبئة رابط ومفتاح Supabase');
-              return;
-            }
-            localStorage.setItem('sa7ifa_supabase_url', url);
-            localStorage.setItem('sa7ifa_supabase_key', key);
-            alert('تم حفظ إعدادات قاعدة البيانات! سيتم إعادة تحميل الصفحة لتفعيلها.');
-            window.location.reload();
-          };
-        }
-
-        if (clearDbBtn) {
-          clearDbBtn.onclick = () => {
-            localStorage.removeItem('sa7ifa_supabase_url');
-            localStorage.removeItem('sa7ifa_supabase_key');
-            alert('تم حذف إعدادات الاتصال والعودة لقاعدة البيانات المحلية المؤقتة.');
-            window.location.reload();
-          };
-        }
-      }
     })();
   </script>
 </body>

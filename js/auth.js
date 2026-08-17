@@ -4,7 +4,7 @@
  * [LOCAL BYPASS ENABLED FOR ADMIN]
  */
 
-import { supabase } from './supabase.js?v=3.1';
+import { supabase } from './supabase.js?v=3.5';
 
 const MOCK_ADMIN_EMAIL = 'developper47@gmail.com';
 const MOCK_ADMIN_PASS = 'admin123';
