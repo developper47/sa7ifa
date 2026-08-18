@@ -3,9 +3,9 @@
 // Updated for the new editorial design with dynamic sections
 // ============================================================
 
-import { getCurrentUser, signOut } from './auth.js?v=3.1';
-import { getSections } from './sections.js?v=3.1';
-import { readingTime } from './posts.js?v=3.1';
+import { getCurrentUser, signOut } from './auth.js?v=3.7';
+import { getSections } from './sections.js?v=3.7';
+import { readingTime } from './posts.js?v=3.7';
 
 // ---- Utility: Eastern Arabic numerals ----
 function toArabicNumerals(str) {
