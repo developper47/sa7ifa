@@ -5,16 +5,8 @@
 
 import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.6';
 
-const localUrl = localStorage.getItem('sa7ifa_supabase_url') || '';
-const localKey = localStorage.getItem('sa7ifa_supabase_key') || '';
-
-let supabaseUrl = configUrl || localUrl;
-const supabaseKey = configKey || localKey;
-
-if (supabaseUrl) {
-  // Clean up URL: remove trailing slashes and /rest/v1 if present
-  supabaseUrl = supabaseUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-}
+let supabaseUrl = configUrl ? configUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') : '';
+const supabaseKey = configKey || '';
 
 let supabaseClient = null;
 
@@ -677,11 +669,4 @@ const mockAuth = {
   }
 };
 
-const mockSupabase = {
-  auth: mockAuth,
-  from(table) {
-    return new SupabaseQueryBuilder(table);
-  }
-};
-
-export const supabase = supabaseClient || mockSupabase;
+export const supabase = supabaseClient;
