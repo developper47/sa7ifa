@@ -3,7 +3,7 @@
 // Resolves DNS/connection issues by running fully in-browser.
 // ============================================================
 
-import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.6';
+import { SUPABASE_URL as configUrl, SUPABASE_ANON_KEY as configKey } from './config.js?v=3.7';
 
 let supabaseUrl = configUrl ? configUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') : '';
 const supabaseKey = configKey || '';

@@ -3,7 +3,7 @@
  * Transitioned from LocalStorage to Supabase DB.
  */
 
-import { supabase } from './supabase.js?v=3.6';
+import { supabase } from './supabase.js?v=3.7';
 
 export const CATEGORIES = [
   { id: 'ideas', name: 'فكر', color: 'var(--cat-ideas)', cssClass: 'cat-ideas' },

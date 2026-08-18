@@ -4,7 +4,7 @@
  * [LOCAL BYPASS ENABLED FOR ADMIN]
  */
 
-import { supabase } from './supabase.js?v=3.6';
+import { supabase } from './supabase.js?v=3.7';
 
 /**
  * Sign up a new user and create their profile.
