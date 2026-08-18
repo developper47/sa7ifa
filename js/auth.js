@@ -6,10 +6,6 @@
 
 import { supabase } from './supabase.js?v=3.6';
 
-const MOCK_ADMIN_EMAIL = 'developper47@gmail.com';
-const MOCK_ADMIN_PASS = 'admin123';
-const MOCK_SESSION_KEY = 'magazine_mock_session';
-
 /**
  * Sign up a new user and create their profile.
  */
@@ -28,22 +24,9 @@ export async function signUp(name, email, password, role = 'reader') {
 }
 
 /**
- * Sign in existing user with local admin bypass
+ * Sign in existing user
  */
 export async function signIn(email, password) {
-  // --- LOCAL BYPASS START ---
-  if (email === MOCK_ADMIN_EMAIL && password === MOCK_ADMIN_PASS) {
-    const mockUser = {
-      id: '00000000-0000-0000-0000-000000000000', // Valid UUID format
-      email: MOCK_ADMIN_EMAIL,
-      name: 'رئيس التحرير',
-      role: 'admin'
-    };
-    localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(mockUser));
-    return { success: true, user: mockUser };
-  }
-  // --- LOCAL BYPASS END ---
-
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -60,7 +43,6 @@ export async function signIn(email, password) {
  * Sign out current user
  */
 export async function signOut() {
-  localStorage.removeItem(MOCK_SESSION_KEY);
   try {
     await supabase.auth.signOut();
   } catch (error) {
@@ -73,12 +55,6 @@ export async function signOut() {
  * Get current authenticated user session
  */
 export async function getCurrentUser() {
-  // Check mock session first
-  const mockSession = localStorage.getItem(MOCK_SESSION_KEY);
-  if (mockSession) {
-    return JSON.parse(mockSession);
-  }
-
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
